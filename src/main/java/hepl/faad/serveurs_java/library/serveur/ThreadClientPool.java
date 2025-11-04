@@ -1,5 +1,7 @@
 package hepl.faad.serveurs_java.library.serveur;
 
+import hepl.faad.serveurs_java.library.protocol.Protocole;
+
 import java.io.IOException;
 
 public class ThreadClientPool extends ThreadClient {
