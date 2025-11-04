@@ -2,6 +2,7 @@ package hepl.faad.serveurs_java.model.dao;
 
 import hepl.faad.serveurs_java.model.ConnectDB;
 import hepl.faad.serveurs_java.model.entity.Patient;
+import hepl.faad.serveurs_java.model.viewmodel.PatientSearchVM;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -41,10 +42,53 @@ public class PatientDAO {
         return null;
     }
 
-    public ArrayList<Patient> load() {
+    public ArrayList<Patient> load()
+    {
+        return this.load(null);
+    }
+
+    public ArrayList<Patient> load(PatientSearchVM psvm) {
         try {
-            String sql = "SELECT id, last_name, first_name, birth_date FROM patients ORDER BY last_name, first_name";
+            String sql = "SELECT id, last_name, first_name, birth_date " +
+                    "FROM patients " +
+                    "ORDER BY last_name, first_name ";
+
+            if(psvm != null)
+            {
+                String where = " WHERE 1=1 ";
+
+                if(psvm.getIdPatient() != null)
+                    where += " AND id_patient=? ";
+                if(psvm.getFirstName() != null)
+                    where += " AND first_name=? ";
+                if(psvm.getLastName() != null)
+                    where += " AND last_name=? ";
+
+                sql += where;
+                sql += " ORDER BY last_name, first_name;";
+            }
             PreparedStatement stmt = connectDB.getConn().prepareStatement(sql);
+
+            if(psvm != null)
+            {
+                int param = 0;
+                if(psvm.getIdPatient() != null)
+                {
+                    param++;
+                    stmt.setInt(param, psvm.getIdPatient());
+                }
+                if(psvm.getFirstName() != null)
+                {
+                    param++;
+                    stmt.setString(param, psvm.getFirstName());
+                }
+                if(psvm.getLastName() != null)
+                {
+                    param++;
+                    stmt.setString(param, psvm.getLastName());
+                }
+            }
+
             ResultSet rs = stmt.executeQuery();
             patients.clear();
 

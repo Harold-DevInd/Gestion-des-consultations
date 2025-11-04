@@ -3,6 +3,7 @@ package hepl.faad.serveurs_java.model.dao;
 import hepl.faad.serveurs_java.model.ConnectDB;
 import hepl.faad.serveurs_java.model.entity.Doctor;
 import hepl.faad.serveurs_java.model.entity.Specialty;
+import hepl.faad.serveurs_java.model.viewmodel.DoctorSearchVM;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -41,13 +42,55 @@ public class DoctorDAO {
         return null;
     }
 
-    public ArrayList<Doctor> load() {
+    public ArrayList<Doctor> load()
+    {
+        return this.load(null);
+    }
+
+    public ArrayList<Doctor> load(DoctorSearchVM dsvm) {
         try {
             String sql = "SELECT d.id AS doctor_id, d.specialty_id, d.last_name, d.first_name, s.name AS specialty_name " +
-                    "FROM doctors d LEFT JOIN specialties s ON d.specialty_id = s.id " +
-                    "ORDER BY d.last_name, d.first_name";
+                    "FROM doctors d " +
+                    "LEFT JOIN specialties s ON d.specialty_id = s.id ";
 
+            if(dsvm != null)
+            {
+                String where = " WHERE 1=1 ";
+
+                if(dsvm.getIdDoctor() != null)
+                    where += " AND d.idDoctor = ? ";
+
+                if(dsvm.getFirstName() != null)
+                    where += " AND d.firstName = ? ";
+                if(dsvm.getLastName() != null)
+                    where += " AND d.lastName = ? ";
+
+                sql += where;
+                sql += " ORDER BY d.id;";
+            }
             PreparedStatement stmt = connectDB.getConn().prepareStatement(sql);
+
+            if(dsvm != null)
+            {
+                int param = 0;
+                if(dsvm.getIdDoctor() != null)
+                {
+                    param++;
+                    stmt.setInt(param, dsvm.getIdDoctor());
+                }
+
+                if(dsvm.getFirstName() != null)
+                {
+                    param++;
+                    stmt.setString(param, dsvm.getFirstName());
+                }
+                if(dsvm.getLastName() != null)
+                {
+                    param++;
+                    stmt.setString(param, dsvm.getLastName());
+                }
+            }
+
             ResultSet rs = stmt.executeQuery();
             doctors.clear();
 

@@ -2,6 +2,7 @@ package hepl.faad.serveurs_java.model.dao;
 
 import hepl.faad.serveurs_java.model.ConnectDB;
 import hepl.faad.serveurs_java.model.entity.Specialty;
+import hepl.faad.serveurs_java.model.viewmodel.SpecialtySearchVM;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -40,10 +41,44 @@ public class SpecialtyDAO {
         return null;
     }
 
-    public ArrayList<Specialty> load() {
+    public ArrayList<Specialty> load()
+    {
+        return this.load(null);
+    }
+
+    public ArrayList<Specialty> load(SpecialtySearchVM ssvm) {
         try {
-            String sql = "SELECT id, name FROM specialties ORDER BY name";
+            String sql = "SELECT id, name " +
+                    "FROM specialties ";
+
+            if (ssvm != null) {
+                String where = " WHERE 1 = 1 ";
+
+                if(ssvm.getIdSpecialty() != null)
+                    where += " AND idSpecialty = ? ";
+                if(ssvm.getNom() != null)
+                    where += " AND name = ? ";
+
+                sql += where;
+                sql += " ORDER BY id;";
+            }
             PreparedStatement stmt = connectDB.getConn().prepareStatement(sql);
+
+            if(ssvm != null)
+            {
+                int param = 0;
+                if(ssvm.getIdSpecialty() != null)
+                {
+                    param++;
+                    stmt.setInt(param++, ssvm.getIdSpecialty());
+                }
+                if(ssvm.getNom() != null)
+                {
+                    param++;
+                    stmt.setString(param++, ssvm.getNom());
+                }
+            }
+
             ResultSet rs = stmt.executeQuery();
             specialties.clear();
 

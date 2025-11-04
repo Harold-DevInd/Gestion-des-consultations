@@ -92,13 +92,11 @@ public class ConsultationDAO {
                     param++;
                     stmt.setInt(param, csvm.getIdConsultation());
                 }
-
                 if(csvm.getDoctor() != null)
                 {
                     param++;
                     stmt.setInt(param, csvm.getDoctor().getIdDoctor());
                 }
-
                 if(csvm.getPatient() != null)
                 {
                     param++;
