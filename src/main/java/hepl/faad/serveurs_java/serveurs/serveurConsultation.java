@@ -1,9 +1,9 @@
 package hepl.faad.serveurs_java.serveurs;
 
-import hepl.faad.serveurs_java.protocol.Logger;
-import hepl.faad.serveurs_java.protocol.Protocole;
-import hepl.faad.serveurs_java.protocol.ThreadServeur;
-import hepl.faad.serveurs_java.protocol.ThreadServeurPool;
+import hepl.faad.serveurs_java.library.serveur.Logger;
+import hepl.faad.serveurs_java.library.serveur.Protocole;
+import hepl.faad.serveurs_java.library.serveur.ThreadServeur;
+import hepl.faad.serveurs_java.library.serveur.ThreadServeurPool;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
