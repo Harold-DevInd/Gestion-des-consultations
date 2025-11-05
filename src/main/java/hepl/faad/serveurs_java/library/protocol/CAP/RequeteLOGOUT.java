@@ -1,15 +1,18 @@
 package hepl.faad.serveurs_java.library.protocol.CAP;
 
 import hepl.faad.serveurs_java.library.serveur.Requete;
+import hepl.faad.serveurs_java.model.entity.Doctor;
+
+import javax.print.Doc;
 
 public class RequeteLOGOUT implements Requete {
-    private String login;
+    private Doctor doctor;
 
-    public RequeteLOGOUT(String login) {
-        this.login = login;
+    public RequeteLOGOUT(Doctor d) {
+        this.doctor = d;
     }
 
-    public String getLogin() {
-        return login;
+    public Doctor getDoctor() {
+        return doctor;
     }
 }

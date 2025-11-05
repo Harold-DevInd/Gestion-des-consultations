@@ -6,6 +6,11 @@ public class SpecialtySearchVM {
 
     public SpecialtySearchVM() {};
 
+    public SpecialtySearchVM(Integer idSpecialty, String nom) {
+        this.idSpecialty = idSpecialty;
+        this.nom = nom;
+    }
+
     public Integer getIdSpecialty() {
         return idSpecialty;
     }

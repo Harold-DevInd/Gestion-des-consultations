@@ -71,7 +71,7 @@ public class ConsultationDAO {
                         String where = " WHERE 1=1 ";
 
                         if(csvm.getIdConsultation() != null)
-                            where += " AND c_id = ? ";
+                            where += " AND c.id = ? ";
 
                         if(csvm.getDoctor() != null)
                             where += " AND d_id = ? ";
@@ -205,13 +205,16 @@ public class ConsultationDAO {
         }
     }
 
-    public void delete(Consultation consult)
+    public boolean delete(Consultation consult)
     {
-        if(consult != null && consult.getIdConsultation() != null)
+        if(consult != null && consult.getIdConsultation() != null) {
             this.delete(consult.getIdConsultation());
+            return true;
+        }
+        return false;
     }
 
-    public void delete(Integer idConsult)
+    public boolean delete(Integer idConsult)
     {
         if(idConsult != null)
             try {
@@ -220,8 +223,11 @@ public class ConsultationDAO {
                 stmt.setInt(1, idConsult);
                 stmt.executeUpdate();
                 stmt.close();
+                return true;
             }catch (SQLException ex) {
                 Logger.getLogger(ConsultationDAO.class.getName()).log(Level.SEVERE, null, ex);
             }
+
+        return false;
     }
 }

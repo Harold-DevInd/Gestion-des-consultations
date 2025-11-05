@@ -10,6 +10,13 @@ public class DoctorSearchVM {
 
     public DoctorSearchVM() {};
 
+    public DoctorSearchVM(Integer idDoctor, Specialty specialty, String lastName, String firstName) {
+        this.idDoctor = idDoctor;
+        this.specialty = specialty;
+        this.lastName = lastName;
+        this.firstName = firstName;
+    }
+
     public Integer getIdDoctor() {
         return idDoctor;
     }

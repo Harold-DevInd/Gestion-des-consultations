@@ -9,7 +9,7 @@ public class RequeteDELETECONSULTATION implements Requete {
         this.idConsultation = idConsultation;
     }
 
-    int getIdConsultation() {
+    public int getIdConsultation() {
         return idConsultation;
     }
 }

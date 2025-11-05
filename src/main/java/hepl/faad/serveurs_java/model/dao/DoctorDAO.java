@@ -58,12 +58,12 @@ public class DoctorDAO {
                 String where = " WHERE 1=1 ";
 
                 if(dsvm.getIdDoctor() != null)
-                    where += " AND d.idDoctor = ? ";
+                    where += " AND d.id = ? ";
 
                 if(dsvm.getFirstName() != null)
-                    where += " AND d.firstName = ? ";
+                    where += " AND d.first_name = ? ";
                 if(dsvm.getLastName() != null)
-                    where += " AND d.lastName = ? ";
+                    where += " AND d.last_name = ? ";
 
                 sql += where;
                 sql += " ORDER BY d.id;";
