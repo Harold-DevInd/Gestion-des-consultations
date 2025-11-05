@@ -3,6 +3,8 @@ module hepl.faad.serveurs_java {
     requires javafx.fxml;
     requires java.logging;
     requires java.sql;
+    requires mysql.connector.j;
+    requires java.desktop;
 
 
     opens hepl.faad.serveurs_java to javafx.fxml;

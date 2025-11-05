@@ -9,6 +9,12 @@ public class PatientSearchVM {
 
     public PatientSearchVM() {};
 
+    public PatientSearchVM(Integer idPatient, String lastName, String firstName) {
+        this.idPatient = idPatient;
+        this.lastName = lastName;
+        this.firstName = firstName;
+    }
+
     public Integer getIdPatient() {
         return idPatient;
     }
