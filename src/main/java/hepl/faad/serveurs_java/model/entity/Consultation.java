@@ -1,11 +1,12 @@
 package hepl.faad.serveurs_java.model.entity;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Date;
 import java.util.Objects;
 
-public class Consultation implements Entity{
+public class Consultation implements Entity, Serializable {
 
     private Integer idConsultation;
     Doctor doctor;

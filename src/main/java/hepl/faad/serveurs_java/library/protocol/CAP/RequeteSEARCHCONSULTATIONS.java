@@ -7,19 +7,21 @@ import hepl.faad.serveurs_java.model.entity.Patient;
 import java.time.LocalDate;
 
 public class RequeteSEARCHCONSULTATIONS implements Requete {
-    private int idConsultation;
+    private Integer idConsultation;
     private Doctor doctor;
     private Patient patient;
-    private LocalDate date;
+    private LocalDate dateDebut;
+    private LocalDate dateFin;
 
-    public RequeteSEARCHCONSULTATIONS(int id, Doctor doctor, Patient patient, LocalDate date) {
+    public RequeteSEARCHCONSULTATIONS(Integer id, Doctor doctor, Patient patient, LocalDate dateDebut, LocalDate dateFin) {
         this.idConsultation = id;
         this.doctor = doctor;
         this.patient = patient;
-        this.date = date;
+        this.dateDebut = dateDebut;
+        this.dateFin = dateFin;
     }
 
-    public int getIdConsultation() {
+    public Integer getIdConsultation() {
         return idConsultation;
     }
 
@@ -31,7 +33,11 @@ public class RequeteSEARCHCONSULTATIONS implements Requete {
         return patient;
     }
 
-    public LocalDate getDate() {
-        return date;
+    public LocalDate getDateDebut() {
+        return dateDebut;
+    }
+
+    public LocalDate getDateFin() {
+        return dateFin;
     }
 }

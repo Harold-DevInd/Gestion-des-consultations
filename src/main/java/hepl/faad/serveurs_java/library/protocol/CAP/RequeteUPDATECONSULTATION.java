@@ -15,11 +15,12 @@ public class RequeteUPDATECONSULTATION implements Requete {
     private LocalTime timeConsultation;
     private String reason;
 
-    public RequeteUPDATECONSULTATION(int id, LocalDate date, LocalTime time,Patient p, String reason) {
+    public RequeteUPDATECONSULTATION(int id, Doctor d, Patient p, LocalDate date, LocalTime time, String reason) {
         this.idConsultation = id;
+        this.patient = p;
+        this.doctor = d;
         this.dateConsultation = date;
         this.timeConsultation = time;
-        this.patient = p;
         this.reason = reason;
     }
 

@@ -246,9 +246,16 @@ public class CAP implements Protocole {
 
         if(estPresent(socket)) {
             List<Consultation> listeConsultations;
+            System.out.println("\n(Protocol) Ajout de la consultations debut");
             try {
                 ConsultationSearchVM consultationSearchVM = new ConsultationSearchVM(requete.getIdConsultation(), requete.getDoctor(), requete.getPatient(),
-                        requete.getDate());
+                        requete.getDateDebut(), requete.getDateFin());
+
+                System.out.println("****Consultation : \n-id:" + consultationSearchVM.getIdConsultation()
+                + "\n-doc:" + consultationSearchVM.getDoctor().getIdDoctor()+ " " + consultationSearchVM.getDoctor().getLastName() + " " + consultationSearchVM.getDoctor().getFirstName() +
+                        "\n-patient:" + consultationSearchVM.getPatient().getLastName() + " " + consultationSearchVM.getPatient().getFirstName() +
+                        "\nDatedebut:" + consultationSearchVM.getDateDebutConsultation().toString() +
+                        "\nDatefin:" + consultationSearchVM.getDateFinConsultation().toString() +"\n");
 
                 listeConsultations = consultationDAO.load(consultationSearchVM);
 
@@ -263,7 +270,7 @@ public class CAP implements Protocole {
                 return new ReponseSEARCHCONSULTATIONS(null);
             }
 
-            logger.Trace("\nListe de consultation trouve");
+            logger.Trace("(Protocol) Liste de consultation trouve");
             return new ReponseSEARCHCONSULTATIONS(listeConsultations);
         }
         else {

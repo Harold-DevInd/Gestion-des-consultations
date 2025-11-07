@@ -55,6 +55,12 @@ public class ConsultationDAO {
 
     public ArrayList<Consultation> load(ConsultationSearchVM csvm)
     {
+        System.out.println("\n(ConsultationDAO.load)");
+        System.out.println("****Consultation : \n-id:" + csvm.getIdConsultation()
+                + "\n-doc:" + csvm.getDoctor().getIdDoctor()+ " " + csvm.getDoctor().getLastName() + " " + csvm.getDoctor().getFirstName() +
+                "\n-patient:" + csvm.getPatient().getLastName() + " " + csvm.getPatient().getFirstName() +
+                "\nDatedebut:" + csvm.getDateDebutConsultation().toString() +
+                "\nDatefin:" + csvm.getDateFinConsultation().toString());
         try
         {
             String sql = "SELECT c.id AS c_id, c.doctor_id, c.patient_id, c.date AS c_date, c.hour AS c_hour, c.reason AS c_reason, " +
@@ -62,9 +68,9 @@ public class ConsultationDAO {
                             "s.id AS s_id, s.name AS s_name, " +
                             "p.id AS p_id, p.last_name AS p_last, p.first_name AS p_first, p.birth_date AS p_birth " +
                             "FROM consultations c " +
-                            "JOIN doctors d ON c.doctor_id = d.id " +
-                            "JOIN specialties s ON d.specialty_id = s.id " +
-                            "JOIN patients p ON c.patient_id = p.id ";
+                            "LEFT JOIN doctors d ON c.doctor_id = d.id " +
+                            "LEFT JOIN specialties s ON d.specialty_id = s.id " +
+                            "LEFT JOIN patients p ON c.patient_id = p.id ";
 
                     if(csvm != null)
                     {
@@ -73,15 +79,22 @@ public class ConsultationDAO {
                         if(csvm.getIdConsultation() != null)
                             where += " AND c.id = ? ";
 
+                        if((csvm.getDateDebutConsultation() != null) && (csvm.getDateFinConsultation() != null))
+                            where += " AND c.date BETWEEN ? AND ? ";
+
                         if(csvm.getDoctor() != null)
-                            where += " AND d_id = ? ";
+                            where += " AND d.id = ? ";
 
-                        if(csvm.getPatient() != null)
-                            where += " AND p_id = ? ";
+                        if((csvm.getPatient().getLastName() != null) && (csvm.getPatient().getFirstName() != null))
+                            where += " AND p.last_name = ? AND p.first_name = ? ";
 
+                        System.out.println("\n****Condition sur la requete" +where+ "****\n");
                         sql += where;
                         sql += " ORDER BY c_id;";
                     }
+
+                    System.out.println("\n****Requette:" +sql+ "****\n");
+
             PreparedStatement stmt = connectDB.getConn().prepareStatement(sql);
 
             if(csvm != null)
@@ -91,16 +104,31 @@ public class ConsultationDAO {
                 {
                     param++;
                     stmt.setInt(param, csvm.getIdConsultation());
+                    System.out.println("\n*******" + csvm.getIdConsultation()+ "*******");
+                }
+                if((csvm.getDateDebutConsultation() != null) && (csvm.getDateFinConsultation() != null))
+                {
+                    param++;
+                    stmt.setDate(param, Date.valueOf(csvm.getDateDebutConsultation()));
+                    param++;
+                    stmt.setDate(param, Date.valueOf(csvm.getDateFinConsultation()));
+                    System.out.println("\n*******" + csvm.getDateDebutConsultation().toString()+ "*******");
+                    System.out.println("\n*******" + csvm.getDateFinConsultation().toString() + "*******");
                 }
                 if(csvm.getDoctor() != null)
                 {
                     param++;
                     stmt.setInt(param, csvm.getDoctor().getIdDoctor());
+                    System.out.println("\n*******" + csvm.getDoctor().getIdDoctor()+ "*******");
                 }
-                if(csvm.getPatient() != null)
+                if((csvm.getPatient().getLastName() != null) && (csvm.getPatient().getFirstName() != null))
                 {
                     param++;
-                    stmt.setInt(param, csvm.getPatient().getIdPatient());
+                    stmt.setString(param, csvm.getPatient().getLastName());
+                    param++;
+                    stmt.setString(param, csvm.getPatient().getFirstName());
+                    System.out.println("\n*******" + csvm.getPatient().getLastName() + "*******");
+                    System.out.println("\n*******" + csvm.getPatient().getFirstName() + "*******");
                 }
             }
 
@@ -138,9 +166,8 @@ public class ConsultationDAO {
         } catch (SQLException ex){
             Logger.getLogger(ConsultationDAO.class.getName()).log(Level.SEVERE, null, ex);
         }
-        finally {
-            return consultations;
-        }
+
+        return consultations;
     }
 
     public void save(Consultation consul)

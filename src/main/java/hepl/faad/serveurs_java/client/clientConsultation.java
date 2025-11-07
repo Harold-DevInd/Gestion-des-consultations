@@ -1,9 +1,9 @@
 package hepl.faad.serveurs_java.client;
 
-import hepl.faad.serveurs_java.library.protocol.CAP.ReponseLOGIN;
-import hepl.faad.serveurs_java.library.protocol.CAP.RequeteLOGIN;
-import hepl.faad.serveurs_java.library.protocol.CAP.RequeteLOGOUT;
+import hepl.faad.serveurs_java.library.protocol.CAP.*;
+import hepl.faad.serveurs_java.model.entity.Consultation;
 import hepl.faad.serveurs_java.model.entity.Doctor;
+import hepl.faad.serveurs_java.model.entity.Patient;
 import hepl.faad.serveurs_java.model.entity.Specialty;
 
 import javax.swing.*;
@@ -21,6 +21,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.List;
 import java.util.Vector;
 
 public class clientConsultation extends JFrame {
@@ -34,12 +35,13 @@ public class clientConsultation extends JFrame {
     private JButton pushButtonLogout;
 
     private JSpinner spinBoxAjoutIdPatient;
-    private JTextField lineEditAjoutLastName;
-    private JTextField lineEditAjoutFirstName;
+    private JTextField linePatientAjoutLastName;
+    private JTextField linePatientAjoutFirstName;
     private JButton pushButtonAjouterPatient;
 
     private JComboBox<String> comboBoxPatients;
     private JFormattedTextField dateEditStartDate;
+    private JFormattedTextField dateEditEndDate;
     private JButton pushButtonRechercher;
 
     private JTable tableWidgetConsultations;
@@ -50,6 +52,7 @@ public class clientConsultation extends JFrame {
 
     // --- Format pour les dates ---
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter HOUR_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
     Socket socket;
     private Doctor doctorConnecte;
@@ -80,14 +83,6 @@ public class clientConsultation extends JFrame {
         // Initialisation de la logique
         logoutOk();
 
-        // Exemples d'utilisation (reproduits du code C++)
-        addTupleTableConsultations(1, "Bryan", "Probleme de dos", "2025-10-01", "09:00");
-        addTupleTableConsultations(2, "Junior", "Nez qui coule", "2025-10-06", "10:15");
-        addTupleTableConsultations(3, "Ayden", "Maux de ventre", "2025-10-23", "14:30");
-
-        addComboBoxPatients("Harold");
-        addComboBoxPatients("Bryan");
-
         this.pack();
         this.setLocationRelativeTo(null); // Centrer la fenêtre
 
@@ -109,8 +104,8 @@ public class clientConsultation extends JFrame {
 
         // --- Zone Ajout Patient ---
         spinBoxAjoutIdPatient = new JSpinner(new SpinnerNumberModel(1, 1, 9999, 1));
-        lineEditAjoutLastName = new JTextField(15);
-        lineEditAjoutFirstName = new JTextField(15);
+        linePatientAjoutLastName = new JTextField(15);
+        linePatientAjoutFirstName = new JTextField(15);
         pushButtonAjouterPatient = new JButton("Ajouter");
 
         // Zone Recherche/Filtres
@@ -118,6 +113,7 @@ public class clientConsultation extends JFrame {
 
         // Formatage des champs de date
         dateEditStartDate = new JFormattedTextField(DATE_FORMATTER.toFormat());
+        dateEditEndDate = new JFormattedTextField(DATE_FORMATTER.toFormat());
 
         pushButtonRechercher = new JButton("Rechercher");
 
@@ -209,10 +205,10 @@ public class clientConsultation extends JFrame {
         gbc.gridx = 1; gbc.gridy = 0; gbc.weightx = 1.0; addPanel.add(spinBoxAjoutIdPatient, gbc);
 
         gbc.gridx = 2; gbc.gridy = 0; gbc.weightx = 0; addPanel.add(new JLabel("Nom:"), gbc);
-        gbc.gridx = 3; gbc.gridy = 0; gbc.weightx = 1.0; addPanel.add(lineEditAjoutLastName, gbc);
+        gbc.gridx = 3; gbc.gridy = 0; gbc.weightx = 1.0; addPanel.add(linePatientAjoutLastName, gbc);
 
         gbc.gridx = 4; gbc.gridy = 0; gbc.weightx = 0; addPanel.add(new JLabel("Prénom:"), gbc);
-        gbc.gridx = 5; gbc.gridy = 0; gbc.weightx = 1.0; addPanel.add(lineEditAjoutFirstName, gbc);
+        gbc.gridx = 5; gbc.gridy = 0; gbc.weightx = 1.0; addPanel.add(linePatientAjoutFirstName, gbc);
 
         gbc.gridx = 6; gbc.gridy = 0; gbc.weightx = 0; addPanel.add(pushButtonAjouterPatient, gbc);
 
@@ -230,11 +226,10 @@ public class clientConsultation extends JFrame {
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0; searchPanel.add(new JLabel("Patients:"), gbc);
-        gbc.gridx = 1; gbc.gridy = 0; gbc.weightx = 1.0; searchPanel.add(comboBoxPatients, gbc);
-
-        gbc.gridx = 2; gbc.gridy = 0; gbc.weightx = 0; searchPanel.add(new JLabel("Date Début:"), gbc);
-        gbc.gridx = 3; gbc.gridy = 0; gbc.weightx = 1.0; searchPanel.add(dateEditStartDate, gbc);
+        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0; searchPanel.add(new JLabel("Date Début:"), gbc);
+        gbc.gridx = 1; gbc.gridy = 0; gbc.weightx = 1.0; searchPanel.add(dateEditStartDate, gbc);
+        gbc.gridx = 2; gbc.gridy = 0; gbc.weightx = 0; searchPanel.add(new JLabel("Date Fin:"), gbc);
+        gbc.gridx = 3; gbc.gridy = 0; gbc.weightx = 1.0; searchPanel.add(dateEditEndDate, gbc);
 
         gbc.gridx = 2; gbc.gridy = 1; gbc.weightx = 0; searchPanel.add(pushButtonRechercher, gbc);
 
@@ -251,12 +246,21 @@ public class clientConsultation extends JFrame {
         JScrollPane scrollPane = new JScrollPane(tableWidgetConsultations);
         main.add(scrollPane, BorderLayout.CENTER);
 
+        //Combobox Patient
+        JPanel bottomLeftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        bottomLeftPanel.add(new JLabel("Patients:"));
+        bottomLeftPanel.add(comboBoxPatients);
+
         // Bouton Réserver
-        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        bottomPanel.add(pushButtonAjouterConsultation);
-        bottomPanel.add(pushButtonModifierConsultation);
-        bottomPanel.add(pushButtonSupprimerConsultation);
-        main.add(bottomPanel, BorderLayout.SOUTH);
+        JPanel bottomRightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        bottomRightPanel.add(pushButtonAjouterConsultation);
+        bottomRightPanel.add(pushButtonModifierConsultation);
+        bottomRightPanel.add(pushButtonSupprimerConsultation);
+
+        JPanel bottom = new JPanel();
+        bottom.add(bottomLeftPanel);
+        bottom.add(bottomRightPanel);
+        main.add(bottom, BorderLayout.SOUTH);
 
         return main;
     }
@@ -268,12 +272,12 @@ public class clientConsultation extends JFrame {
     /**
      * Ajoute une ligne à la table des consultations.
      */
-    public void addTupleTableConsultations(int id, String specialty, String doctor, String date, String hour) {
+    public void addTupleTableConsultations(int id, String patient, String reason, String date, String hour) {
         // Utilisation de Vector pour simuler l'ajout de ligne
         Vector<Object> rowData = new Vector<>();
         rowData.add(id);
-        rowData.add(specialty);
-        rowData.add(doctor);
+        rowData.add(patient);
+        rowData.add(reason);
         rowData.add(date);
         rowData.add(hour);
 
@@ -299,10 +303,6 @@ public class clientConsultation extends JFrame {
         comboBoxPatients.addItem(patient);
     }
 
-    public String getSelectionPatient() {
-        return (String) comboBoxPatients.getSelectedItem();
-    }
-
     public void clearComboBoxPatients() {
         comboBoxPatients.removeAllItems();
         addComboBoxPatients("--- TOUTES ---");
@@ -321,16 +321,37 @@ public class clientConsultation extends JFrame {
         return lineMedecinSpeciality.getText();
     }
 
+    public int getPatientID() {
+        return (int) spinBoxAjoutIdPatient.getValue();
+    }
+
+    public String getPatientLastName() {
+        return linePatientAjoutLastName.getText();
+    }
+
+    public String getPatientFirstName() {
+        return linePatientAjoutFirstName.getText();
+    }
+
     public int getMedecinId() {
         return (int) spinBoxIdMedecin.getValue();
     }
 
     public String getPatientSelected(){
-        return (String) comboBoxPatients.getSelectedItem();
+        String p = comboBoxPatients.getSelectedItem().toString();
+
+        if(p.equals("--- TOUTES ---"))
+            return null;
+
+        return p;
     }
 
     public String getStartDate() {
         return dateEditStartDate.getText();
+    }
+
+    public String getEndDate() {
+        return dateEditEndDate.getText();
     }
 
     public void setMedecinLastName(String value) {
@@ -345,16 +366,31 @@ public class clientConsultation extends JFrame {
         lineMedecinSpeciality.setText(value);
     }
 
-    public void setPatientId(int value) {
+    public void setMedecinId(int value) {
         if (value > 0) spinBoxIdMedecin.setValue(value);
     }
 
+    public void setPatientID(int value) {
+        if(value > 0) spinBoxAjoutIdPatient.setValue(value);
+    }
+
+    public void setPatientLastName(String value) { linePatientAjoutLastName.setText(value); }
+
+    public void setPatientFirstName(String value) { linePatientAjoutFirstName.setText(value); }
+
     public void setStartDate(String date) {
         try {
-            LocalDate localDate = LocalDate.parse(date, DATE_FORMATTER);
-            dateEditStartDate.setText(date);
+            LocalDate localDateS = LocalDate.parse(date, DATE_FORMATTER);
+            dateEditStartDate.setText(localDateS.toString());
         } catch (Exception e) {
-            // Ignorer si la date n'est pas valide
+        }
+    }
+
+    public void setEndDate(String date) {
+        try {
+            LocalDate localDateE = LocalDate.parse(date, DATE_FORMATTER);
+            dateEditEndDate.setText(localDateE.toString());
+        } catch (Exception e) {
         }
     }
 
@@ -365,7 +401,7 @@ public class clientConsultation extends JFrame {
         lineMedecinLastName.setEditable(false);
         lineMedecinFirstName.setEditable(false);
         lineMedecinSpeciality.setEditable(false);
-        spinBoxIdMedecin.setEnabled(false); // Simuler spinBoxId->setReadOnly(true)
+        //spinBoxIdMedecin.setEnabled(false); // Simuler spinBoxId->setReadOnly(true)
         pushButtonLogout.setEnabled(true);
         pushButtonLogin.setEnabled(false);
         pushButtonAjouterPatient.setEnabled(true);
@@ -381,7 +417,7 @@ public class clientConsultation extends JFrame {
         lineMedecinFirstName.setEditable(true);
         setMedecinFirstName("");
         spinBoxIdMedecin.setEnabled(true);
-        setPatientId(1);
+        setMedecinId(1);
         lineMedecinSpeciality.setEditable(true);
         setMedecinSpecialty("");
         pushButtonLogout.setEnabled(false);
@@ -392,6 +428,7 @@ public class clientConsultation extends JFrame {
         pushButtonModifierConsultation.setEnabled(false);
         pushButtonAjouterConsultation.setEnabled(false);
         setStartDate("2025-09-15");
+        setEndDate("2025-12-31");
         clearComboBoxPatients();
         clearTableConsultations();
     }
@@ -465,21 +502,71 @@ public class clientConsultation extends JFrame {
     }
 
     public void on_pushButtonAjouter_clicked(java.awt.event.ActionEvent e) {
-        int selectedRow = getSelectionIndexTableConsultations();
+        String lastNamePatient = getPatientLastName();
+        String firstNamePatient = getPatientFirstName();
 
-        System.out.println("selectedRow = " + selectedRow);
+        try {
+            RequeteADDPATIENT requete = new RequeteADDPATIENT(lastNamePatient, firstNamePatient);
+            oss.writeObject(requete);
+            ReponseADDPATIENT reponse = (ReponseADDPATIENT) ois.readObject();
 
-        // Logique de réservation à ajouter ici
+            if(reponse.getIdPatient() != -1)
+            {
+                addComboBoxPatients(lastNamePatient + " " + firstNamePatient);
+                dialogMessage("Sucess", "Ajout du patient " + lastNamePatient + " " + firstNamePatient + " reussi");
+            }
+            else
+                dialogError("Erreur", "Erreur lors de l'ajout du patient " + lastNamePatient + " " + firstNamePatient);
+        } catch (IOException | ClassNotFoundException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     public void on_pushButtonRechercher_clicked(java.awt.event.ActionEvent e) {
         String patient = getPatientSelected();
         String startDate = getStartDate();
+        String endDate = getEndDate();
+        Patient p = null;
 
+        System.out.println(RequeteSEARCHCONSULTATIONS.class);
         System.out.println("Patient = " + patient);
         System.out.println("startDate = " + startDate);
+        System.out.println("endDate = " + endDate);
 
-        // Logique de recherche à ajouter ici
+        if(patient != null) {
+            String[] param = patient.split(" ");
+            p = new Patient(null, param[0], param[1], null);
+        }
+        try {
+            RequeteSEARCHCONSULTATIONS requete = new RequeteSEARCHCONSULTATIONS(null, doctorConnecte, p,
+                    LocalDate.parse(startDate, DATE_FORMATTER), LocalDate.parse(endDate, DATE_FORMATTER));
+            oss.writeObject(requete);
+            ReponseSEARCHCONSULTATIONS reponse = (ReponseSEARCHCONSULTATIONS) ois.readObject();
+
+            if(reponse != null)
+            {
+                clearTableConsultations();
+                dialogMessage("Sucess", "Liste des consultations recuperer avec sucess");
+
+                List<Consultation> listeConsultation = reponse.getConsultations();
+
+                for (Consultation c : listeConsultation) {
+                    String nomPatient = "Vide", raisonPatient = "Vide";
+                    if((c.getPatient().getLastName() != null) && (c.getPatient().getFirstName() != null))
+                        nomPatient = c.getPatient().getLastName() + " " + c.getPatient().getFirstName();
+                    if(!c.getRaison().isEmpty())
+                        raisonPatient = c.getRaison();
+
+                    addTupleTableConsultations(c.getIdConsultation(), nomPatient, raisonPatient,
+                            c.getDateConsultation().toString(), c.getHeureConsultation());
+                }
+            }
+            else
+                dialogError("Erreur", "Echec de la recuperation de la liste des consultations");
+
+        } catch (IOException | ClassNotFoundException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     public void on_pushButtonAjouterConsultation_clicked(java.awt.event.ActionEvent e) {
@@ -488,6 +575,13 @@ public class clientConsultation extends JFrame {
         System.out.println("selectedRow = " + selectedRow);
 
         // Logique de réservation à ajouter ici
+        /*
+        try {
+
+        } catch (IOException | ClassNotFoundException ex) {
+            throw new RuntimeException(ex);
+        }
+         */
     }
 
     public void on_pushButtonModifierConsultation_clicked(java.awt.event.ActionEvent e) {
@@ -533,7 +627,13 @@ public class clientConsultation extends JFrame {
                     "Réservation de la consultation ID " + id + " confirmée pour le " + date + " à " + heure + ".");
 
             // TODO: Mettre ici le code pour envoyer la requête de réservation au serveur (ex: 'BOOK_CONSULTATION#id#date#heure#raison')
+            /*
+            try {
 
+            } catch (IOException | ClassNotFoundException ex) {
+                throw new RuntimeException(ex);
+            }
+             */
         } else {
             dialogMessage("Modification", "Modification annulée.");
         }
@@ -545,6 +645,13 @@ public class clientConsultation extends JFrame {
         System.out.println("selectedRow = " + selectedRow);
 
         // Logique de réservation à ajouter ici
+        /*
+        try {
+
+        } catch (IOException | ClassNotFoundException ex) {
+            throw new RuntimeException(ex);
+        }
+         */
     }
 
     // ==================================================================================

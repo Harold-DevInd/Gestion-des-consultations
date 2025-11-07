@@ -9,15 +9,17 @@ public class ConsultationSearchVM {
     private Integer idConsultation;
     private Doctor doctor;
     private Patient patient;
-    private LocalDate dateConsultation;
+    private LocalDate dateDebutConsultation;
+    private LocalDate dateFinConsultation;
 
     public ConsultationSearchVM() {};
 
-    public ConsultationSearchVM(Integer id, Doctor doctor, Patient patient, LocalDate dateConsultation) {
+    public ConsultationSearchVM(Integer id, Doctor doctor, Patient patient, LocalDate dateDebutConsultation, LocalDate dateFinConsultation) {
         this.idConsultation = id;
         this.doctor = doctor;
         this.patient = patient;
-        this.dateConsultation = dateConsultation;
+        this.dateDebutConsultation = dateDebutConsultation;
+        this.dateFinConsultation = dateFinConsultation;
     }
 
     public Integer getIdConsultation() {
@@ -29,7 +31,10 @@ public class ConsultationSearchVM {
     }
 
     public Doctor getDoctor() {
-        return doctor;
+        if(doctor != null)
+            return doctor;
+        else
+            return new Doctor();
     }
 
     public void setDoctor(Doctor doctor) {
@@ -37,18 +42,28 @@ public class ConsultationSearchVM {
     }
 
     public Patient getPatient() {
-        return patient;
+        if(patient != null)
+            return patient;
+        else
+            return new Patient();
     }
 
     public void setPatient(Patient patient) {
         this.patient = patient;
     }
 
-    public LocalDate getDateConsultation() {
-        return dateConsultation;
+    public LocalDate getDateDebutConsultation() {
+        return dateDebutConsultation;
+    }
+    public void setDateDebutConsultation(LocalDate dateDebutConsultation) {
+        this.dateDebutConsultation = dateDebutConsultation;
     }
 
-    public void setDateConsultation(LocalDate dateConsultation) {
-        this.dateConsultation = dateConsultation;
+    public LocalDate getDateFinConsultation() {
+        return dateFinConsultation;
+    }
+
+    public void setDateFinConsultation(LocalDate dateFinConsultation) {
+        this.dateFinConsultation = dateFinConsultation;
     }
 }

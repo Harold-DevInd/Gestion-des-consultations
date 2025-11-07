@@ -3,7 +3,7 @@ package hepl.faad.serveurs_java.model.entity;
 import java.io.Serializable;
 import java.util.Objects;
 
-public class Doctor implements Serializable {
+public class Doctor implements Entity,Serializable {
 
     private Integer idDoctor;
     private Specialty specialty;

@@ -1,10 +1,11 @@
 package hepl.faad.serveurs_java.model.entity;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.Date;
 import java.util.Objects;
 
-public class Patient implements Entity {
+public class Patient implements Entity,Serializable {
 
     private Integer idPatient;
     private String lastName;
