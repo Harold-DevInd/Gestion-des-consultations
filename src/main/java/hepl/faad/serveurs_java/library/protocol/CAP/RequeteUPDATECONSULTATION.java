@@ -8,14 +8,14 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 public class RequeteUPDATECONSULTATION implements Requete {
-    private int idConsultation;
+    private Integer idConsultation;
     private Doctor doctor;
     private Patient patient;
     private LocalDate dateConsultation;
     private LocalTime timeConsultation;
     private String reason;
 
-    public RequeteUPDATECONSULTATION(int id, Doctor d, Patient p, LocalDate date, LocalTime time, String reason) {
+    public RequeteUPDATECONSULTATION(Integer id, Doctor d, Patient p, LocalDate date, LocalTime time, String reason) {
         this.idConsultation = id;
         this.patient = p;
         this.doctor = d;
@@ -24,7 +24,7 @@ public class RequeteUPDATECONSULTATION implements Requete {
         this.reason = reason;
     }
 
-    public int getIdConsultation() {
+    public Integer getIdConsultation() {
         return idConsultation;
     }
 

@@ -205,18 +205,16 @@ public class ConsultationDAO {
                 }
                 else
                 {
-                    if((consul.getDoctor() == null || consul.getDoctor().getIdDoctor() == null) && (consul.getPatient() == null || consul.getPatient().getIdPatient() == null))
+                    if((consul.getDoctor() == null || consul.getDoctor().getIdDoctor() == null))
                         return;
 
-                    sql = "INSERT INTO consultations ( doctor_id, patient_id, date, hour, reason) " +
-                            " VALUES (?, ?, ?, ?, ?)";
+                    sql = "INSERT INTO consultations ( doctor_id, date, hour) " +
+                            " VALUES (?, ?, ?)";
 
                     PreparedStatement pStmt = connectDB.getConn().prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
                     pStmt.setInt(1, consul.getDoctor().getIdDoctor());
-                    pStmt.setInt(2, consul.getPatient().getIdPatient());
-                    pStmt.setDate(3, Date.valueOf(consul.getDateConsultation()));
-                    pStmt.setString(4, consul.getHeureConsultation());
-                    pStmt.setString(5, consul.getRaison());
+                    pStmt.setDate(2, Date.valueOf(consul.getDateConsultation()));
+                    pStmt.setString(3, consul.getHeureConsultation());
 
                     pStmt.executeUpdate();
                     ResultSet rs = pStmt.getGeneratedKeys();

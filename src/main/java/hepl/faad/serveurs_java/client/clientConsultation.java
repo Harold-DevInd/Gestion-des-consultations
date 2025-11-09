@@ -6,6 +6,7 @@ import hepl.faad.serveurs_java.model.entity.Doctor;
 import hepl.faad.serveurs_java.model.entity.Patient;
 import hepl.faad.serveurs_java.model.entity.Specialty;
 
+import javax.print.Doc;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -18,7 +19,9 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
@@ -53,6 +56,7 @@ public class clientConsultation extends JFrame {
     // --- Format pour les dates ---
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final DateTimeFormatter HOUR_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
+    LocalTime LIMITE_HEURE = LocalTime.of(17, 0);
 
     Socket socket;
     private Doctor doctorConnecte;
@@ -104,6 +108,7 @@ public class clientConsultation extends JFrame {
 
         // --- Zone Ajout Patient ---
         spinBoxAjoutIdPatient = new JSpinner(new SpinnerNumberModel(1, 1, 9999, 1));
+        spinBoxAjoutIdPatient.setEnabled(false);
         linePatientAjoutLastName = new JTextField(15);
         linePatientAjoutFirstName = new JTextField(15);
         pushButtonAjouterPatient = new JButton("Ajouter");
@@ -201,16 +206,21 @@ public class clientConsultation extends JFrame {
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0; addPanel.add(new JLabel("ID:"), gbc);
-        gbc.gridx = 1; gbc.gridy = 0; gbc.weightx = 1.0; addPanel.add(spinBoxAjoutIdPatient, gbc);
+        /*gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0; addPanel.add(new JLabel("ID:"), gbc);
+        gbc.gridx = 1; gbc.gridy = 0; gbc.weightx = 1.0; addPanel.add(spinBoxAjoutIdPatient, gbc);*/
 
-        gbc.gridx = 2; gbc.gridy = 0; gbc.weightx = 0; addPanel.add(new JLabel("Nom:"), gbc);
-        gbc.gridx = 3; gbc.gridy = 0; gbc.weightx = 1.0; addPanel.add(linePatientAjoutLastName, gbc);
+        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0; addPanel.add(new JLabel("Nom:"), gbc);
+        gbc.gridx = 1; gbc.gridy = 0; gbc.weightx = 1.0; addPanel.add(linePatientAjoutLastName, gbc);
 
-        gbc.gridx = 4; gbc.gridy = 0; gbc.weightx = 0; addPanel.add(new JLabel("Prénom:"), gbc);
-        gbc.gridx = 5; gbc.gridy = 0; gbc.weightx = 1.0; addPanel.add(linePatientAjoutFirstName, gbc);
+        gbc.gridx = 2; gbc.gridy = 0; gbc.weightx = 0; addPanel.add(new JLabel("Prénom:"), gbc);
+        gbc.gridx = 3; gbc.gridy = 0; gbc.weightx = 1.0; addPanel.add(linePatientAjoutFirstName, gbc);
 
-        gbc.gridx = 6; gbc.gridy = 0; gbc.weightx = 0; addPanel.add(pushButtonAjouterPatient, gbc);
+        gbc.gridx = 4; gbc.gridy = 0; gbc.weightx = 0; addPanel.add(pushButtonAjouterPatient, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0; addPanel.add(new JLabel("ID:"), gbc);
+        gbc.gridx = 1; gbc.gridy = 1; gbc.weightx = 1.0; addPanel.add(spinBoxAjoutIdPatient, gbc);
+        gbc.gridx = 2; gbc.gridy = 1; gbc.weightx = 0; addPanel.add(new JLabel("Patient:"), gbc);
+        gbc.gridx = 3; gbc.gridy = 1; gbc.weightx = 1.0; addPanel.add(comboBoxPatients, gbc);
 
         // Organisation du TOP Panel
         JPanel northContainer = new JPanel(new GridLayout(1, 2, 10, 0)); // Grille 1 ligne, 2 colonnes
@@ -247,18 +257,17 @@ public class clientConsultation extends JFrame {
         main.add(scrollPane, BorderLayout.CENTER);
 
         //Combobox Patient
-        JPanel bottomLeftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        /*JPanel bottomLeftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         bottomLeftPanel.add(new JLabel("Patients:"));
-        bottomLeftPanel.add(comboBoxPatients);
+        bottomLeftPanel.add(comboBoxPatients);*/
 
         // Bouton Réserver
-        JPanel bottomRightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JPanel bottomRightPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         bottomRightPanel.add(pushButtonAjouterConsultation);
         bottomRightPanel.add(pushButtonModifierConsultation);
         bottomRightPanel.add(pushButtonSupprimerConsultation);
 
         JPanel bottom = new JPanel();
-        bottom.add(bottomLeftPanel);
         bottom.add(bottomRightPanel);
         main.add(bottom, BorderLayout.SOUTH);
 
@@ -513,6 +522,7 @@ public class clientConsultation extends JFrame {
             if(reponse.getIdPatient() != -1)
             {
                 addComboBoxPatients(lastNamePatient + " " + firstNamePatient);
+                setPatientID(reponse.getIdPatient());
                 dialogMessage("Sucess", "Ajout du patient " + lastNamePatient + " " + firstNamePatient + " reussi");
             }
             else
@@ -554,7 +564,7 @@ public class clientConsultation extends JFrame {
                     String nomPatient = "Vide", raisonPatient = "Vide";
                     if((c.getPatient().getLastName() != null) && (c.getPatient().getFirstName() != null))
                         nomPatient = c.getPatient().getLastName() + " " + c.getPatient().getFirstName();
-                    if(!c.getRaison().isEmpty())
+                    if(c.getRaison() != null)
                         raisonPatient = c.getRaison();
 
                     addTupleTableConsultations(c.getIdConsultation(), nomPatient, raisonPatient,
@@ -570,29 +580,65 @@ public class clientConsultation extends JFrame {
     }
 
     public void on_pushButtonAjouterConsultation_clicked(java.awt.event.ActionEvent e) {
-        int selectedRow = getSelectionIndexTableConsultations();
+        DefaultTableModel model = (DefaultTableModel) tableWidgetConsultations.getModel();
+        Object[] rowData = new Object[model.getColumnCount()];
+        Doctor doctor = new Doctor(getMedecinId(), null, getMedecinLastName(), getMedecinFirstName());
 
-        System.out.println("selectedRow = " + selectedRow);
+        // 2. Ouvrir le dialogue de réservation
+        ReservationDialog dialog = new ReservationDialog(this, rowData, 1);
+        dialog.setVisible(true); // Bloque jusqu'à ce que le dialogue soit fermé (modal)
 
-        // Logique de réservation à ajouter ici
-        /*
-        try {
+        // 3. Traiter le résultat
+        if (dialog.isConfirmed()) {
+            boolean result = false;
+            String date = dialog.getDate();
+            String heureDebut = dialog.getHeure();
+            int duree = Integer.parseInt(dialog.getDuree());
+            int nbrConsul = Integer.parseInt(dialog.getNombreConsultation());
 
-        } catch (IOException | ClassNotFoundException ex) {
-            throw new RuntimeException(ex);
+            // Affichage des données a inserer
+            System.out.println("\n--- Creation des consultation avec parametre ---");
+            System.out.println("Doctor = " + doctor.getIdDoctor()+ " " + doctor.getLastName() + " " + doctor.getFirstName());
+            System.out.println("Date: " + date + " à " + heureDebut);
+            System.out.println("Duree: " + duree);
+            System.out.println("Nombre de Consultation: " + nbrConsul);
+
+            try {
+                RequeteADDCONSULTATION requete = new RequeteADDCONSULTATION(doctor, LocalDate.parse(date, DATE_FORMATTER),
+                        LocalTime.parse(heureDebut, HOUR_FORMATTER), duree, nbrConsul);
+                oss.writeObject(requete);
+                ReponseADDCONSULTATION reponse = (ReponseADDCONSULTATION) ois.readObject();
+
+                result = reponse.isSuccess();
+
+                if(result)
+                {
+                    dialogMessage("Ajout de consultation",
+                            "Consultations ajoute avec sucess a partir du " + date + " à " + heureDebut);
+                }
+                else {
+                    dialogMessage("Ajout de consultation", "Ajout annulée.");
+                }
+            } catch (IOException | ClassNotFoundException ex) {
+                throw new RuntimeException(ex);
+            }
+
+        } else {
+            dialogMessage("Ajout de consultation", "Ajout annulée.");
         }
-         */
     }
 
     public void on_pushButtonModifierConsultation_clicked(java.awt.event.ActionEvent e) {
         int selectedRow = this.getSelectionIndexTableConsultations();
 
         if (selectedRow == -1) {
-            dialogError("Réservation", "Veuillez sélectionner une consultation dans la liste.");
+            dialogError("Modification de la consultation", "Veuillez sélectionner une consultation dans la liste.");
             return;
         }
 
         DefaultTableModel model = (DefaultTableModel) tableWidgetConsultations.getModel();
+        Doctor doctor = new Doctor(getMedecinId(), null, getMedecinLastName(), getMedecinFirstName());
+        Patient patient;
 
         // Récupère les colonnes (Id, Patient, Raison, Date, Heure)
         Object[] rowData = new Object[model.getColumnCount()];
@@ -600,58 +646,70 @@ public class clientConsultation extends JFrame {
             rowData[i] = model.getValueAt(selectedRow, i);
         }
 
-        // Informations du médecin connecté (pour le champ "Patient" du dialogue)
-        String doctorInfo = "ID: " + getMedecinId() + " - " + getMedecinLastName() + " " + getMedecinFirstName();
-
-        // 2. Ouvrir le dialogue de réservation
-        ReservationDialog dialog = new ReservationDialog(this, rowData);
-        dialog.setVisible(true); // Bloque jusqu'à ce que le dialogue soit fermé (modal)
+        ReservationDialog dialog = new ReservationDialog(this, rowData, 2);
+        dialog.setVisible(true);
 
         // 3. Traiter le résultat
         if (dialog.isConfirmed()) {
             String id = dialog.getConsultationId();
-            String patient = dialog.getPatient();
+            String nomPatient = dialog.getPatient();
             String raison = dialog.getRaison();
             String date = dialog.getDate();
             String heure = dialog.getHeure();
 
             // Affichage des données (à remplacer par l'envoi au serveur)
-            System.out.println("--- Réservation Confirmée ---");
+            System.out.println("--- Modification envoyé ---");
             System.out.println("ID Consultation: " + id);
-            System.out.println("Patient" + patient);
-            System.out.println("Médecin: " + doctorInfo);
+            System.out.println("Patient " + nomPatient);
+            System.out.println("Médecin: " + doctor.getIdDoctor()+ " " + doctor.getLastName() + " " + doctor.getFirstName());
             System.out.println("Raison: " + raison);
             System.out.println("Nouvelle Date/Heure: " + date + " à " + heure);
 
-            dialogMessage("Confirmation de Réservation",
-                    "Réservation de la consultation ID " + id + " confirmée pour le " + date + " à " + heure + ".");
-
-            // TODO: Mettre ici le code pour envoyer la requête de réservation au serveur (ex: 'BOOK_CONSULTATION#id#date#heure#raison')
-            /*
             try {
+                String[] param = nomPatient.trim().split(" ");
+                patient = new Patient(Integer.parseInt(param[0]), param[1], param[2], null);
 
+                RequeteUPDATECONSULTATION requete = new RequeteUPDATECONSULTATION(Integer.parseInt(id), doctor, patient,
+                        LocalDate.parse(date, DATE_FORMATTER), LocalTime.parse(heure, HOUR_FORMATTER), raison);
+                oss.writeObject(requete);
+                ReponseUPDATECONSULTATION reponse = (ReponseUPDATECONSULTATION) ois.readObject();
+
+                if(reponse.isSuccess())
+                    dialogMessage("Confirmation de Modification",
+                        "Modification de la consultation ID " + id + " par" + patient.getLastName() + " " + patient.getFirstName() +
+                                " confirmée pour le " + date + " à " + heure + ".");
+                else
+                    dialogError("Modification de consultation", "Echec de la modification de la consultation " + dialog.getConsultationId());
             } catch (IOException | ClassNotFoundException ex) {
                 throw new RuntimeException(ex);
             }
-             */
         } else {
-            dialogMessage("Modification", "Modification annulée.");
+            dialogError("Modification de consultation", "Modification de la consultation " + dialog.getConsultationId() + " annulée");
         }
     }
 
     public void on_pushButtonSupprimerConsultation_clicked(java.awt.event.ActionEvent e) {
         int selectedRow = getSelectionIndexTableConsultations();
+        DefaultTableModel model = (DefaultTableModel) tableWidgetConsultations.getModel();
+
+        Integer id = (Integer) model.getValueAt(selectedRow, 0);
 
         System.out.println("selectedRow = " + selectedRow);
 
-        // Logique de réservation à ajouter ici
-        /*
         try {
+            RequeteDELETECONSULTATION requete = new RequeteDELETECONSULTATION(id);
+            oss.writeObject(requete);
+            ReponseDELETECONSULTATION reponse = (ReponseDELETECONSULTATION) ois.readObject();
+
+            if(reponse.isSuccess())
+                dialogMessage("Confirmation de la suppression",
+                        "Suppression de la consultation ID " + id);
+            else
+                dialogError("Suppression de consultation", "Echec de la suppression de la consultation " + id);
 
         } catch (IOException | ClassNotFoundException ex) {
             throw new RuntimeException(ex);
         }
-         */
     }
 
     // ==================================================================================

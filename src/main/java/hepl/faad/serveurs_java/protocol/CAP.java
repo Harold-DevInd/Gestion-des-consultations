@@ -51,7 +51,7 @@ public class CAP implements Protocole {
         this.patientDAO = new PatientDAO();
         this.specialtyDAO = new SpecialtyDAO();
         this.conn = this.consultationDAO.getConnectDB().getConn();
-        this.conn.setAutoCommit(false);
+        this.conn.setAutoCommit(true);
     }
 
     @Override
@@ -125,80 +125,29 @@ public class CAP implements Protocole {
             logger.Trace(requete.getDoctor().getLastName() + requete.getDoctor().getFirstName() + " non conneté \n");
     }
 
-    private ReponseADDCONSULTATION TraiteRequeteADDCONSULTATION(RequeteADDCONSULTATION requete, Socket socket)
-    {
-        logger.Trace("Requete " + requete.getClass().toString() + " recu de " + socket);
-
-        List<Consultation> listeConsultation = new ArrayList<>();
-        LocalTime heure = requete.getTime();
-        LocalTime LIMITE_HEURE = LocalTime.of(17, 0);
-        int duree = requete.getDure();
-
-        if(estPresent(socket)) {
-            try {
-                for (int i = 0; i < requete.getNombreConsultation(); i++)
-                {
-                    LocalTime heureConsultation = heure.plusMinutes(i * duree);
-                    // Si la consultation dépasse la limite, on refuse
-                    if (heureConsultation.isAfter(LIMITE_HEURE) || heureConsultation.equals(LIMITE_HEURE)) {
-                        logger.Trace("\nConsultation demandée au-delà de 17h00 !");
-                        return new ReponseADDCONSULTATION(false);
-                    }
-                    listeConsultation.add(new Consultation(null, null, null, requete.getDate(),
-                                    heureConsultation.toString(), null)
-                    );
-                }
-
-                for(Consultation consultation : listeConsultation)
-                    consultationDAO.save(consultation);
-
-
-                conn.getAutoCommit();
-                //conn.commit();
-            } catch (SQLException e) {
-                try { conn.rollback(); } catch (Exception rollbackEx) {}
-                logger.Trace("Erreur lors de l'ajout des consultations : " + e.getMessage());
-                return new ReponseADDCONSULTATION(false);
-            }
-
-            logger.Trace("\nAjout des consultations avec succes");
-            return new ReponseADDCONSULTATION(true);
-        }
-        else {
-            for(Socket sock : clientsConnectes.values()) {
-                if(sock.equals(socket)) {
-                    logger.Trace("Erreur requete" +requete.getClass().toString()+ " car  client " + socket + " non conneté \n");
-                }
-            }
-        }
-        return null;
-    }
-
     private ReponseADDPATIENT TraiteRequeteADDPATIENT(RequeteADDPATIENT requete, Socket socket) {
         logger.Trace("Requete " + requete.getClass().toString() + " recu de " + socket);
+
+        Patient patient = null;
 
         if(estPresent(socket)) {
             try {
                 String lastName = requete.getLastName();
                 String firstName = requete.getFirstName();
 
-                Patient patient = new Patient(null, lastName, firstName, LocalDate.now());
+                patient = new Patient(null, lastName, firstName, LocalDate.now());
 
                 patientDAO.save(patient);
 
-                conn.getAutoCommit();
-                //conn.commit();
+                conn.commit();
             } catch (SQLException e) {
                 try { conn.rollback(); } catch (Exception rollbackEx) {}
                 logger.Trace("Erreur lors de l'ajout des consultations : " + e.getMessage());
                 return new ReponseADDPATIENT(-1);
             }
 
-            List<Patient> listePatients = patientDAO.load();
-            Patient p = listePatients.getLast();
-
             logger.Trace("\nAjout du patient avec succes");
-            return new ReponseADDPATIENT(p.getIdPatient());
+            return new ReponseADDPATIENT(patient.getIdPatient());
         }
         else {
             for(Socket sock : clientsConnectes.values()) {
@@ -208,37 +157,6 @@ public class CAP implements Protocole {
             }
         }
         return new ReponseADDPATIENT(-1);
-    }
-
-    private ReponseUPDATECONSULTATION TraiteRequeteUPDATECONSULTATION(RequeteUPDATECONSULTATION requete, Socket socket) {
-        logger.Trace("Requete " + requete.getClass().toString() + " recu de " + socket);
-
-        if(estPresent(socket)) {
-            try {
-                Consultation consultation = new Consultation(requete.getIdConsultation(), requete.getDoctor(), requete.getPatient(),
-                        requete.getDateConsultation(), requete.getTimeConsultation().toString(), requete.getReason());
-
-                consultationDAO.save(consultation);
-
-                conn.getAutoCommit();
-                //conn.commit();
-            } catch (SQLException e) {
-                try { conn.rollback(); } catch (Exception rollbackEx) {}
-                logger.Trace("Erreur lors de la mise a jour des consultations : " + e.getMessage());
-                return new ReponseUPDATECONSULTATION(false);
-            }
-
-            logger.Trace("\nAjout de la consultations avec succes");
-            return new ReponseUPDATECONSULTATION(true);
-        }
-        else {
-            for(Socket sock : clientsConnectes.values()) {
-                if(sock.equals(socket)) {
-                    logger.Trace("Erreur requete" +requete.getClass().toString()+ " car  client " + socket + " non conneté \n");
-                }
-            }
-        }
-        return new ReponseUPDATECONSULTATION(false);
     }
 
     private ReponseSEARCHCONSULTATIONS TraiteRequeteSEARCHCONSULTATIONS(RequeteSEARCHCONSULTATIONS requete, Socket socket) {
@@ -252,7 +170,7 @@ public class CAP implements Protocole {
                         requete.getDateDebut(), requete.getDateFin());
 
                 System.out.println("****Consultation : \n-id:" + consultationSearchVM.getIdConsultation()
-                + "\n-doc:" + consultationSearchVM.getDoctor().getIdDoctor()+ " " + consultationSearchVM.getDoctor().getLastName() + " " + consultationSearchVM.getDoctor().getFirstName() +
+                        + "\n-doc:" + consultationSearchVM.getDoctor().getIdDoctor()+ " " + consultationSearchVM.getDoctor().getLastName() + " " + consultationSearchVM.getDoctor().getFirstName() +
                         "\n-patient:" + consultationSearchVM.getPatient().getLastName() + " " + consultationSearchVM.getPatient().getFirstName() +
                         "\nDatedebut:" + consultationSearchVM.getDateDebutConsultation().toString() +
                         "\nDatefin:" + consultationSearchVM.getDateFinConsultation().toString() +"\n");
@@ -260,7 +178,6 @@ public class CAP implements Protocole {
                 listeConsultations = consultationDAO.load(consultationSearchVM);
 
                 conn.getAutoCommit();
-                //conn.commit();
             } catch (SQLException e) {
                 try {
                     conn.rollback();
@@ -283,6 +200,91 @@ public class CAP implements Protocole {
         return null;
     }
 
+    private ReponseADDCONSULTATION TraiteRequeteADDCONSULTATION(RequeteADDCONSULTATION requete, Socket socket) {
+        logger.Trace("Requete " + requete.getClass().toString() + " recu de " + socket);
+
+        List<Consultation> listeConsultation = new ArrayList<>();
+        Doctor doctor = requete.getDoctor();
+        LocalTime heure = requete.getTime();
+        LocalTime LIMITE_HEURE = LocalTime.of(17, 0);
+        int duree = requete.getDure();
+
+        if(estPresent(socket)) {
+            try {
+                for (int i = 0; i < requete.getNombreConsultation(); i++)
+                {
+                    LocalTime heureConsultation = heure.plusMinutes(i * duree);
+                    // Si la consultation dépasse la limite, on refuse
+                    if (heureConsultation.isAfter(LIMITE_HEURE) || heureConsultation.equals(LIMITE_HEURE)) {
+                        logger.Trace("\nConsultation demandée au-delà de 17h00 !");
+                        return new ReponseADDCONSULTATION(false);
+                    }
+                    listeConsultation.add(new Consultation(null, doctor, null, requete.getDate(),
+                            heureConsultation.toString(), null)
+                    );
+                }
+
+                for(Consultation consultation : listeConsultation)
+                    consultationDAO.save(consultation);
+
+                conn.commit();
+            } catch (SQLException e) {
+                try { conn.rollback(); } catch (Exception rollbackEx) {}
+                logger.Trace("Erreur lors de l'ajout des consultations : " + e.getMessage());
+                return new ReponseADDCONSULTATION(false);
+            }
+
+            logger.Trace("\nAjout des consultations avec succes");
+            return new ReponseADDCONSULTATION(true);
+        }
+        else {
+            for(Socket sock : clientsConnectes.values()) {
+                if(sock.equals(socket)) {
+                    logger.Trace("Erreur requete" +requete.getClass().toString()+ " car  client " + socket + " non conneté \n");
+                }
+            }
+        }
+        return null;
+    }
+
+    private ReponseUPDATECONSULTATION TraiteRequeteUPDATECONSULTATION(RequeteUPDATECONSULTATION requete, Socket socket) {
+        logger.Trace("Requete " + requete.getClass().toString() + " recu de " + socket);
+
+        if(estPresent(socket)) {
+            try {
+                Consultation consultation = new Consultation(requete.getIdConsultation(), requete.getDoctor(), requete.getPatient(),
+                        requete.getDateConsultation(), requete.getTimeConsultation().toString(), requete.getReason());
+
+                System.out.println("\n(Protocol) Consultation a modifie");
+                System.out.println("Consiltation id : " + consultation.getIdConsultation() +
+                        "\nDoctor_id : " + consultation.getDoctor().getIdDoctor() +
+                        "\npatient_id : " + consultation.getPatient().getIdPatient() +
+                        "\nDate consultation : " + consultation.getDateConsultation() +
+                        "\nHeure : " + consultation.getHeureConsultation() +
+                        "\nRaison : " + consultation.getRaison());
+
+                consultationDAO.save(consultation);
+
+                conn.commit();
+            } catch (SQLException e) {
+                try { conn.rollback(); } catch (Exception rollbackEx) {}
+                logger.Trace("Erreur lors de la mise a jour des consultations : " + e.getMessage());
+                return new ReponseUPDATECONSULTATION(false);
+            }
+
+            logger.Trace("\nAjout de la consultations avec succes");
+            return new ReponseUPDATECONSULTATION(true);
+        }
+        else {
+            for(Socket sock : clientsConnectes.values()) {
+                if(sock.equals(socket)) {
+                    logger.Trace("Erreur requete" +requete.getClass().toString()+ " car  client " + socket + " non conneté \n");
+                }
+            }
+        }
+        return new ReponseUPDATECONSULTATION(false);
+    }
+
     private ReponseDELETECONSULTATION TraiteRequeteDELETECONSULTATION(RequeteDELETECONSULTATION requete, Socket socket) {
         logger.Trace("Requete " + requete.getClass().toString() + " recu de " + socket);
 
@@ -292,15 +294,14 @@ public class CAP implements Protocole {
             try {
                 res = consultationDAO.delete(requete.getIdConsultation());
 
-                conn.getAutoCommit();
-                //conn.commit();
+                conn.commit();
             } catch (SQLException e) {
                 try { conn.rollback(); } catch (Exception rollbackEx) {}
                 logger.Trace("Erreur lors de la suppression des consultations : " + e.getMessage());
                 return new ReponseDELETECONSULTATION(res);
             }
 
-            logger.Trace("\nListe de consultation trouve");
+            logger.Trace("Suppression de la consultation");
             return new ReponseDELETECONSULTATION(res);
         }
         else {
