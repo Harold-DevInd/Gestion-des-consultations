@@ -40,12 +40,6 @@ public class ConsultationDAO {
     public ArrayList<Consultation> load(ConsultationSearchVM csvm) {
         ArrayList<Consultation> consultations = new ArrayList<>();
 
-        System.out.println("\n(ConsultationDAO.load)");
-        System.out.println("****Consultation : \n-id:" + csvm.getIdConsultation()
-                + "\n-doc:" + csvm.getDoctor().getIdDoctor()+ " " + csvm.getDoctor().getLastName() + " " + csvm.getDoctor().getFirstName() +
-                "\n-patient:" + csvm.getPatient().getLastName() + " " + csvm.getPatient().getFirstName() +
-                "\nDatedebut:" + csvm.getDateDebutConsultation().toString() +
-                "\nDatefin:" + csvm.getDateFinConsultation().toString());
         try
         {
             String sql = "SELECT c.id AS c_id, c.doctor_id, c.patient_id, c.date AS c_date, c.hour AS c_hour, c.reason AS c_reason, " +
@@ -89,7 +83,6 @@ public class ConsultationDAO {
                 {
                     param++;
                     stmt.setInt(param, csvm.getIdConsultation());
-                    System.out.println("\n*******" + csvm.getIdConsultation()+ "*******");
                 }
                 if((csvm.getDateDebutConsultation() != null) && (csvm.getDateFinConsultation() != null))
                 {
@@ -97,14 +90,11 @@ public class ConsultationDAO {
                     stmt.setDate(param, Date.valueOf(csvm.getDateDebutConsultation()));
                     param++;
                     stmt.setDate(param, Date.valueOf(csvm.getDateFinConsultation()));
-                    System.out.println("\n*******" + csvm.getDateDebutConsultation().toString()+ "*******");
-                    System.out.println("\n*******" + csvm.getDateFinConsultation().toString() + "*******");
                 }
                 if(csvm.getDoctor() != null)
                 {
                     param++;
                     stmt.setInt(param, csvm.getDoctor().getIdDoctor());
-                    System.out.println("\n*******" + csvm.getDoctor().getIdDoctor()+ "*******");
                 }
                 if((csvm.getPatient().getLastName() != null) && (csvm.getPatient().getFirstName() != null))
                 {
@@ -112,8 +102,6 @@ public class ConsultationDAO {
                     stmt.setString(param, csvm.getPatient().getLastName());
                     param++;
                     stmt.setString(param, csvm.getPatient().getFirstName());
-                    System.out.println("\n*******" + csvm.getPatient().getLastName() + "*******");
-                    System.out.println("\n*******" + csvm.getPatient().getFirstName() + "*******");
                 }
             }
 
@@ -154,8 +142,7 @@ public class ConsultationDAO {
         return consultations;
     }
 
-    public void save(Consultation consul)
-    {
+    public void save(Consultation consul) {
         try{
             String sql;
 

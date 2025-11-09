@@ -168,12 +168,6 @@ public class CAP implements Protocole {
             ConsultationSearchVM consultationSearchVM = new ConsultationSearchVM(requete.getIdConsultation(), requete.getDoctor(), requete.getPatient(),
                     requete.getDateDebut(), requete.getDateFin());
 
-            System.out.println("****Consultation : \n-id:" + consultationSearchVM.getIdConsultation()
-                    + "\n-doc:" + consultationSearchVM.getDoctor().getIdDoctor()+ " " + consultationSearchVM.getDoctor().getLastName() + " " + consultationSearchVM.getDoctor().getFirstName() +
-                    "\n-patient:" + consultationSearchVM.getPatient().getLastName() + " " + consultationSearchVM.getPatient().getFirstName() +
-                    "\nDatedebut:" + consultationSearchVM.getDateDebutConsultation().toString() +
-                    "\nDatefin:" + consultationSearchVM.getDateFinConsultation().toString() +"\n");
-
             listeConsultations = consultationDAO.load(consultationSearchVM);
 
             logger.Trace("(Protocol) Liste de consultation trouve");
@@ -234,14 +228,6 @@ public class CAP implements Protocole {
         if(estPresent(socket)) {
             Consultation consultation = new Consultation(requete.getIdConsultation(), requete.getDoctor(), requete.getPatient(),
                     requete.getDateConsultation(), requete.getTimeConsultation().toString(), requete.getReason());
-
-            System.out.println("\n(Protocol) Consultation a modifie");
-            System.out.println("Consiltation id : " + consultation.getIdConsultation() +
-                    "\nDoctor_id : " + consultation.getDoctor().getIdDoctor() +
-                    "\npatient_id : " + consultation.getPatient().getIdPatient() +
-                    "\nDate consultation : " + consultation.getDateConsultation() +
-                    "\nHeure : " + consultation.getHeureConsultation() +
-                    "\nRaison : " + consultation.getRaison());
 
             consultationDAO.save(consultation);
 

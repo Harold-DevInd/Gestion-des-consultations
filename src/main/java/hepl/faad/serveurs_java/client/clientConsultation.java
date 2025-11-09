@@ -468,6 +468,7 @@ public class clientConsultation extends JFrame {
         String ipServeur = "127.0.0.1";
         int portServeur = 50050;
 
+        System.out.println("\nRequete : " + RequeteLOGIN.class.getSimpleName());
         System.out.println("lastName = " + lastName);
         System.out.println("FirstName = " + firstName);
         System.out.println("patientId = " + MedecinId);
@@ -498,6 +499,9 @@ public class clientConsultation extends JFrame {
     }
 
     public void on_pushButtonLogout_clicked(java.awt.event.ActionEvent e) {
+
+        System.out.println("\nRequete : " + RequeteLOGOUT.class.getSimpleName());
+
         RequeteLOGOUT requete = new RequeteLOGOUT(doctorConnecte);
         try {
             oss.writeObject(requete);
@@ -511,6 +515,8 @@ public class clientConsultation extends JFrame {
     }
 
     public void on_pushButtonAjouter_clicked(java.awt.event.ActionEvent e) {
+
+        System.out.println("\nRequete : " + RequeteADDPATIENT.class.getSimpleName());
         String lastNamePatient = getPatientLastName();
         String firstNamePatient = getPatientFirstName();
 
@@ -538,7 +544,7 @@ public class clientConsultation extends JFrame {
         String endDate = getEndDate();
         Patient p = null;
 
-        System.out.println(RequeteSEARCHCONSULTATIONS.class);
+        System.out.println("\nRequete : " + RequeteSEARCHCONSULTATIONS.class.getSimpleName());
         System.out.println("Patient = " + patient);
         System.out.println("startDate = " + startDate);
         System.out.println("endDate = " + endDate);
@@ -580,6 +586,8 @@ public class clientConsultation extends JFrame {
     }
 
     public void on_pushButtonAjouterConsultation_clicked(java.awt.event.ActionEvent e) {
+
+        System.out.println("\nRequete : " + ReponseADDCONSULTATION.class.getSimpleName());
         DefaultTableModel model = (DefaultTableModel) tableWidgetConsultations.getModel();
         Object[] rowData = new Object[model.getColumnCount()];
         Doctor doctor = new Doctor(getMedecinId(), null, getMedecinLastName(), getMedecinFirstName());
@@ -615,6 +623,7 @@ public class clientConsultation extends JFrame {
                 {
                     dialogMessage("Ajout de consultation",
                             "Consultations ajoute avec sucess a partir du " + date + " à " + heureDebut);
+                    on_pushButtonRechercher_clicked(e);
                 }
                 else {
                     dialogMessage("Ajout de consultation", "Ajout annulée.");
@@ -629,6 +638,8 @@ public class clientConsultation extends JFrame {
     }
 
     public void on_pushButtonModifierConsultation_clicked(java.awt.event.ActionEvent e) {
+
+        System.out.println("\nRequete : " + RequeteUPDATECONSULTATION.class.getSimpleName());
         int selectedRow = this.getSelectionIndexTableConsultations();
 
         if (selectedRow == -1) {
@@ -674,10 +685,12 @@ public class clientConsultation extends JFrame {
                 oss.writeObject(requete);
                 ReponseUPDATECONSULTATION reponse = (ReponseUPDATECONSULTATION) ois.readObject();
 
-                if(reponse.isSuccess())
+                if(reponse.isSuccess()) {
                     dialogMessage("Confirmation de Modification",
-                        "Modification de la consultation ID " + id + " par" + patient.getLastName() + " " + patient.getFirstName() +
-                                " confirmée pour le " + date + " à " + heure + ".");
+                            "Modification de la consultation ID " + id + " par" + patient.getLastName() + " " + patient.getFirstName() +
+                                    " confirmée pour le " + date + " à " + heure + ".");
+                    on_pushButtonRechercher_clicked(e);
+                }
                 else
                     dialogError("Modification de consultation", "Echec de la modification de la consultation " + dialog.getConsultationId());
             } catch (IOException | ClassNotFoundException ex) {
@@ -689,6 +702,8 @@ public class clientConsultation extends JFrame {
     }
 
     public void on_pushButtonSupprimerConsultation_clicked(java.awt.event.ActionEvent e) {
+
+        System.out.println("\nRequete : " + RequeteDELETECONSULTATION.class.getSimpleName());
         int selectedRow = getSelectionIndexTableConsultations();
         DefaultTableModel model = (DefaultTableModel) tableWidgetConsultations.getModel();
 
@@ -701,9 +716,11 @@ public class clientConsultation extends JFrame {
             oss.writeObject(requete);
             ReponseDELETECONSULTATION reponse = (ReponseDELETECONSULTATION) ois.readObject();
 
-            if(reponse.isSuccess())
+            if(reponse.isSuccess()) {
                 dialogMessage("Confirmation de la suppression",
                         "Suppression de la consultation ID " + id);
+                on_pushButtonRechercher_clicked(e);
+            }
             else
                 dialogError("Suppression de consultation", "Echec de la suppression de la consultation " + id);
 
@@ -711,10 +728,6 @@ public class clientConsultation extends JFrame {
             throw new RuntimeException(ex);
         }
     }
-
-    // ==================================================================================
-    //                                  POINT D'ENTRÉE (main)
-    // ==================================================================================
 
     public static void main(String[] args) {
         // Lance l'interface graphique sur l'Event Dispatch Thread (EDT)
