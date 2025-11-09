@@ -27,25 +27,9 @@ public class ConsultationDAO {
     }
 
     private ConnectDB connectDB;
-    private ArrayList<Consultation> consultations;
 
     public ConsultationDAO() {
         connectDB = new ConnectDB();
-        consultations = new ArrayList<>();
-    }
-
-    public ArrayList<Consultation> getConsultations() {
-        return consultations;
-    }
-
-    public Consultation getConsultationById(Integer idConsul)
-    {
-        for(Consultation consul : consultations)
-        {
-            if(Objects.equals(consul.getIdConsultation(), idConsul))
-                return consul;
-        }
-        return null;
     }
 
     public ArrayList<Consultation> load()
@@ -53,8 +37,9 @@ public class ConsultationDAO {
         return this.load(null);
     }
 
-    public ArrayList<Consultation> load(ConsultationSearchVM csvm)
-    {
+    public ArrayList<Consultation> load(ConsultationSearchVM csvm) {
+        ArrayList<Consultation> consultations = new ArrayList<>();
+
         System.out.println("\n(ConsultationDAO.load)");
         System.out.println("****Consultation : \n-id:" + csvm.getIdConsultation()
                 + "\n-doc:" + csvm.getDoctor().getIdDoctor()+ " " + csvm.getDoctor().getLastName() + " " + csvm.getDoctor().getFirstName() +
@@ -133,7 +118,6 @@ public class ConsultationDAO {
             }
 
             ResultSet rs = stmt.executeQuery();
-            consultations.clear();
 
             while(rs.next())
             {

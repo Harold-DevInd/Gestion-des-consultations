@@ -15,11 +15,9 @@ import java.util.logging.Logger;
 
 public class DoctorDAO {
     private ConnectDB connectDB;
-    private ArrayList<Doctor> doctors;
 
     public DoctorDAO() {
         connectDB = new ConnectDB();
-        doctors = new ArrayList<>();
     }
 
     public ConnectDB getConnectDB() {
@@ -30,24 +28,14 @@ public class DoctorDAO {
         this.connectDB = connectDB;
     }
 
-    public ArrayList<Doctor> getDoctors() {
-        return doctors;
-    }
-
-    public Doctor getDoctorById(Integer id)
-    {
-        for (Doctor d : doctors) {
-            if (Objects.equals(d.getIdDoctor(), id)) return d;
-        }
-        return null;
-    }
-
     public ArrayList<Doctor> load()
     {
         return this.load(null);
     }
 
     public ArrayList<Doctor> load(DoctorSearchVM dsvm) {
+        ArrayList<Doctor> doctors = new ArrayList<>();
+
         try {
             String sql = "SELECT d.id AS doctor_id, d.specialty_id, d.last_name, d.first_name, s.name AS specialty_name " +
                     "FROM doctors d " +

@@ -14,11 +14,9 @@ import java.util.logging.Logger;
 
 public class SpecialtyDAO {
     private ConnectDB connectDB;
-    private ArrayList<Specialty> specialties;
 
     public SpecialtyDAO() {
         connectDB = new ConnectDB();
-        specialties = new ArrayList<>();
     }
 
     public ConnectDB getConnectDB() {
@@ -29,24 +27,14 @@ public class SpecialtyDAO {
         this.connectDB = connectDB;
     }
 
-    public ArrayList<Specialty> getSpecialties() {
-        return specialties;
-    }
-
-    public Specialty getSpecialtyById(Integer id)
-    {
-        for (Specialty s : specialties) {
-            if (Objects.equals(s.getIdSpecialty(), id)) return s;
-        }
-        return null;
-    }
-
     public ArrayList<Specialty> load()
     {
         return this.load(null);
     }
 
     public ArrayList<Specialty> load(SpecialtySearchVM ssvm) {
+        ArrayList<Specialty> specialties = new ArrayList<>();
+
         try {
             String sql = "SELECT id, name " +
                     "FROM specialties ";
