@@ -1,4 +1,4 @@
-package hepl.faad.serveurs_java.client;
+package hepl.faad.serveurs_java.clients;
 
 import javax.swing.*;
 import java.awt.*;

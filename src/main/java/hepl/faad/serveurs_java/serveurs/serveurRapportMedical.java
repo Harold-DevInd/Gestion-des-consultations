@@ -6,6 +6,7 @@ import hepl.faad.serveurs_java.library.serveur.ThreadServeur;
 import hepl.faad.serveurs_java.library.serveur.ThreadServeurDemande;
 import hepl.faad.serveurs_java.library.serveur.ThreadServeurPool;
 import hepl.faad.serveurs_java.protocol.CAP;
+import hepl.faad.serveurs_java.protocol.MRPS;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -13,6 +14,8 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.security.*;
+import java.security.cert.*;
 
 public class serveurRapportMedical implements Logger {
     ThreadServeur threadServeur;
@@ -33,7 +36,7 @@ public class serveurRapportMedical implements Logger {
             System.err.println("Erreur de format dans le fichier de configuration (port ou taille pool) : " + e.getMessage());
             return;
         }
-        protocole = new CAP(this);
+    protocole = new MRPS(this);
 
         threadServeur = new ThreadServeurDemande(port, protocole, this);
         threadServeur.start();

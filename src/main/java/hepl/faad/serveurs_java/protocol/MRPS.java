@@ -1,10 +1,5 @@
 package hepl.faad.serveurs_java.protocol;
 
-
-import hepl.faad.serveurs_java.library.protocol.CAP.*;
-import hepl.faad.serveurs_java.library.protocol.CAP.ReponseLOGIN;
-import hepl.faad.serveurs_java.library.protocol.CAP.RequeteLOGIN;
-import hepl.faad.serveurs_java.library.protocol.CAP.RequeteLOGOUT;
 import hepl.faad.serveurs_java.library.protocol.MRPS.*;
 import hepl.faad.serveurs_java.library.protocol.Protocole;
 import hepl.faad.serveurs_java.library.serveur.FinConnexionException;
@@ -97,13 +92,13 @@ public class MRPS implements Protocole {
 
             if(valide) {
                 logger.Trace(requete.getNom() + " correctement loggé \n");
-                return new ReponseLOGIN(valide);
+                return new ReponseLOGIN(valide, null);
             }
             logger.Trace("\nErreur de connexion de " + requete.getNom());
-            return new ReponseLOGIN(valide);
+            return new ReponseLOGIN(valide, null);
         }
         logger.Trace("\nErreur client " + requete.getNom() + ", socket null");
-        return new ReponseLOGIN(false);
+        return new ReponseLOGIN(false, null);
     }
 
     private void TraiteRequeteLOGOUT(RequeteLOGOUT requete, Socket socket) throws FinConnexionException {

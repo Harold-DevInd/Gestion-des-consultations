@@ -1,4 +1,4 @@
-package hepl.faad.serveurs_java.client;
+package hepl.faad.serveurs_java.clients;
 
 import hepl.faad.serveurs_java.library.protocol.CAP.*;
 import hepl.faad.serveurs_java.model.entity.Consultation;
@@ -6,30 +6,21 @@ import hepl.faad.serveurs_java.model.entity.Doctor;
 import hepl.faad.serveurs_java.model.entity.Patient;
 import hepl.faad.serveurs_java.model.entity.Specialty;
 
-import javax.print.Doc;
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.table.*;
 import java.awt.*;
-import java.awt.event.*;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.List;
 import java.util.Vector;
 
 public class clientConsultation extends JFrame {
 
-    // --- Composants de l'Interface Utilisateur (Équivalent de ui->...) ---
     private JTextField lineMedecinLastName;
     private JTextField lineMedecinFirstName;
     private JSpinner spinBoxIdMedecin;
@@ -53,7 +44,6 @@ public class clientConsultation extends JFrame {
     private JButton pushButtonModifierConsultation;
     private JButton pushButtonSupprimerConsultation;
 
-    // --- Format pour les dates ---
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final DateTimeFormatter HOUR_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
     LocalTime LIMITE_HEURE = LocalTime.of(17, 0);
@@ -72,23 +62,20 @@ public class clientConsultation extends JFrame {
 
         // Configuration de la fenêtre
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setLayout(new BorderLayout(10, 10)); // Utilisation d'un BorderLayout pour la structure principale
+        this.setLayout(new BorderLayout(10, 10));
 
-        // Initialisation et configuration des composants
         initComponents();
 
-        // Assemblage des panneaux
         JPanel topPanel = createTopPanel();
         JPanel centerPanel = createCenterPanel();
 
         this.add(topPanel, BorderLayout.NORTH);
         this.add(centerPanel, BorderLayout.CENTER);
 
-        // Initialisation de la logique
         logoutOk();
 
         this.pack();
-        this.setLocationRelativeTo(null); // Centrer la fenêtre
+        this.setLocationRelativeTo(null);
 
         doctorConnecte = new Doctor();
         doctorSpecialte = new Specialty();
@@ -106,41 +93,35 @@ public class clientConsultation extends JFrame {
         pushButtonLogin = new JButton("Login");
         pushButtonLogout = new JButton("Logout");
 
-        // --- Zone Ajout Patient ---
         spinBoxAjoutIdPatient = new JSpinner(new SpinnerNumberModel(1, 1, 9999, 1));
         spinBoxAjoutIdPatient.setEnabled(false);
         linePatientAjoutLastName = new JTextField(15);
         linePatientAjoutFirstName = new JTextField(15);
         pushButtonAjouterPatient = new JButton("Ajouter");
 
-        // Zone Recherche/Filtres
         comboBoxPatients = new JComboBox<>();
 
-        // Formatage des champs de date
         dateEditStartDate = new JFormattedTextField(DATE_FORMATTER.toFormat());
         dateEditEndDate = new JFormattedTextField(DATE_FORMATTER.toFormat());
 
         pushButtonRechercher = new JButton("Rechercher");
 
-        // Zone Table
         String[] columns = {"Id", "Patient", "Raison", "Date", "Heure"};
         tableModelConsultations = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // setEditTriggers(QAbstractItemView::NoEditTriggers);
+                return false;
             }
         };
         tableWidgetConsultations = new JTable(tableModelConsultations);
 
-        // Configuration de la table (reproduction des styles Qt)
         tableWidgetConsultations.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tableWidgetConsultations.setSelectionBackground(Color.YELLOW.brighter());
-        tableWidgetConsultations.setRowSelectionAllowed(true); // SelectRows
+        tableWidgetConsultations.setRowSelectionAllowed(true);
         tableWidgetConsultations.setColumnSelectionAllowed(false);
         tableWidgetConsultations.getTableHeader().setReorderingAllowed(false);
-        tableWidgetConsultations.getTableHeader().setBackground(Color.decode("#FFFFE0")); // lightyellow
+        tableWidgetConsultations.getTableHeader().setBackground(Color.decode("#FFFFE0"));
 
-        // Définition des largeurs de colonne
         int[] columnWidths = {40, 150, 200, 150, 100};
         for (int col = 0; col < columns.length; col++) {
             tableWidgetConsultations.getColumnModel().getColumn(col).setPreferredWidth(columnWidths[col]);
