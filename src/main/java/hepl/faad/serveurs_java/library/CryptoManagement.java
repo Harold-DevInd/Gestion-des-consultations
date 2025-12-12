@@ -47,4 +47,18 @@ public class CryptoManagement{
         chiffrementD.init(Cipher.DECRYPT_MODE, cle);
         return chiffrementD.doFinal(data);
     }
+
+    public static byte[] SignData(PrivateKey cle,byte[] data) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException {
+        Signature signature = Signature.getInstance("SHA1withRSA","BC");
+        signature.initSign(cle);
+        signature.update(data);
+        return signature.sign();
     }
+
+    public static boolean VerifySignature(PublicKey cle,byte[] data,byte[] sig) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException {
+        Signature signature = Signature.getInstance("SHA1withRSA","BC");
+        signature.initVerify(cle);
+        signature.update(data);
+        return signature.verify(sig);
+    }
+}

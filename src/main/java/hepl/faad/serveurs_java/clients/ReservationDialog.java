@@ -27,9 +27,9 @@ public class ReservationDialog extends JDialog {
     int Option;
 
     public ReservationDialog(JFrame owner, Object[] consultationData, int option) {
-        super(owner, "Confirmer/Modifier la Réservation", true); // 'true' rend le dialogue modal
+        super(owner, "Confirmer/Modifier la Réservation", true);
         Option = option;
-        // Initialisation des champs
+
         if(option == 1)
         {
             //Ajouter

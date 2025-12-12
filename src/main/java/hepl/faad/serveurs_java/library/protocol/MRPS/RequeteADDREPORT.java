@@ -1,6 +1,8 @@
 package hepl.faad.serveurs_java.library.protocol.MRPS;
 
-public class RequeteADDREPORT {
+import hepl.faad.serveurs_java.library.serveur.Requete;
+
+public class RequeteADDREPORT implements Requete {
     private byte[] message;
     private byte[] signature;
 

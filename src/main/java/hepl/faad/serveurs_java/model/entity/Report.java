@@ -1,5 +1,8 @@
 package hepl.faad.serveurs_java.model.entity;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.Objects;
@@ -19,6 +22,30 @@ public class Report implements Entity,Serializable {
         this.patientId = patientId;
         this.dateReport = dateReport;
         this.content = content;
+    }
+
+    public static Report convertByteToReport(byte[] rapportByte) {
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(rapportByte);
+             ObjectInputStream ois = new ObjectInputStream(bais)) {
+
+            return (Report) ois.readObject();
+
+        } catch (IOException | ClassNotFoundException e) {
+            throw new RuntimeException("Erreur de conversion byte[] -> Report", e);
+        }
+    }
+
+    public static byte[] convertByteToArray(Report newReport) {
+        try (java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+             java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(baos)) {
+
+            oos.writeObject(newReport);
+            oos.flush();
+            return baos.toByteArray();
+
+        } catch (IOException e) {
+            throw new RuntimeException("Erreur de conversion Report -> byte[]", e);
+        }
     }
 
     public Integer getIdReport() {

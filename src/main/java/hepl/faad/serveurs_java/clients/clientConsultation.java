@@ -573,11 +573,9 @@ public class clientConsultation extends JFrame {
         Object[] rowData = new Object[model.getColumnCount()];
         Doctor doctor = new Doctor(getMedecinId(), null, getMedecinLastName(), getMedecinFirstName());
 
-        // 2. Ouvrir le dialogue de réservation
         ReservationDialog dialog = new ReservationDialog(this, rowData, 1);
-        dialog.setVisible(true); // Bloque jusqu'à ce que le dialogue soit fermé (modal)
+        dialog.setVisible(true);
 
-        // 3. Traiter le résultat
         if (dialog.isConfirmed()) {
             boolean result = false;
             String date = dialog.getDate();
@@ -585,7 +583,6 @@ public class clientConsultation extends JFrame {
             int duree = Integer.parseInt(dialog.getDuree());
             int nbrConsul = Integer.parseInt(dialog.getNombreConsultation());
 
-            // Affichage des données a inserer
             System.out.println("\n--- Creation des consultation avec parametre ---");
             System.out.println("Doctor = " + doctor.getIdDoctor()+ " " + doctor.getLastName() + " " + doctor.getFirstName());
             System.out.println("Date: " + date + " à " + heureDebut);

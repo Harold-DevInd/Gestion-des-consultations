@@ -8,4 +8,5 @@ public class ReponseADDREPORT implements Reponse {
     public ReponseADDREPORT(byte[] message) { this.message = message; }
 
     public byte[] getMessage() { return message; }
+    public void setMessage(byte[] message) { this.message = message; }
 }

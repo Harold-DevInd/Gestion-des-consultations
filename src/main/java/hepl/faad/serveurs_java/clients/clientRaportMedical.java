@@ -15,9 +15,10 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.io.*;
 import java.net.Socket;
-import java.util.Arrays;
 import java.security.*;
 import java.security.cert.*;
+import java.time.LocalDate;
+import java.util.Arrays;
 
 public class clientRaportMedical extends JFrame {
     private JPanel searchControlPanel;
@@ -34,6 +35,7 @@ public class clientRaportMedical extends JFrame {
     private DefaultTableModel tableModelRapportMedical;
 
     private JTextArea contentArea;
+    private JButton pushButtonAdd;
     private JButton pushButtonModify;
 
     // Ajout d'une variable pour contenir les données complètes (y compris le contenu)
@@ -128,6 +130,7 @@ public class clientRaportMedical extends JFrame {
         contentArea.setLineWrap(true);
         contentArea.setWrapStyleWord(true);
 
+        pushButtonAdd = new JButton("Ajouter un rapport");
         pushButtonModify = new JButton("Modifier le rapport");
 
         logoutOk();
@@ -139,7 +142,8 @@ public class clientRaportMedical extends JFrame {
         pushButtonLogin.addActionListener(this::on_pushButtonLogin_clicked);
         pushButtonLogout.addActionListener(this::on_pushButtonLogout_clicked);
         pushButtonSearch.addActionListener(e -> {});
-        pushButtonModify.addActionListener(e -> {});
+        pushButtonAdd.addActionListener(this::on_pushButtonAddRapport_clicked);
+        pushButtonModify.addActionListener(this::on_pushButtonModifyRapport_clicked);
     }
 
     private JPanel createAuthPanel() {
@@ -201,6 +205,7 @@ public class clientRaportMedical extends JFrame {
         panel.setBorder(new TitledBorder("3. Contenu du Rapport et Modification"));
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.add(pushButtonAdd);
         buttonPanel.add(pushButtonModify);
 
         JScrollPane scrollPane = new JScrollPane(contentArea);
@@ -266,6 +271,7 @@ public class clientRaportMedical extends JFrame {
         pushButtonLogin.setEnabled(false);
         pushButtonLogout.setEnabled(true);
         pushButtonSearch.setEnabled(true);
+        pushButtonAdd.setEnabled(true);
         pushButtonModify.setEnabled(true);
 
         nomField.setEditable(false);
@@ -277,6 +283,7 @@ public class clientRaportMedical extends JFrame {
         pushButtonLogin.setEnabled(true);
         pushButtonLogout.setEnabled(false);
         pushButtonSearch.setEnabled(false);
+        pushButtonAdd.setEnabled(false);
         pushButtonModify.setEnabled(false);
         nomField.setEditable(true);
         prenomField.setEditable(true);
@@ -378,6 +385,85 @@ public class clientRaportMedical extends JFrame {
             logoutOk();
         } catch (IOException ex) {
             throw new RuntimeException(ex);
+        }
+    }
+
+    public void on_pushButtonAddRapport_clicked(java.awt.event.ActionEvent e) {
+
+        AjoutRapport dialog = new AjoutRapport(this, null, 1);
+        dialog.setVisible(true);
+
+        if (dialog.isConfirmed()) {
+            String result = "non";
+            int patientId = Integer.parseInt(dialog.getPatientId());
+            String date = dialog.getDate();
+            String raison = dialog.getRaison();
+
+            System.out.println("\n--- Creation d un rapport ---");
+            System.out.println("Doctor ID = " + doctorConnecte.getIdDoctor());
+            System.out.println("Patient ID = " + patientId);
+            System.out.println("Date: " + date );
+            System.out.println("Raison: " + raison);
+
+            Report newReport = new Report();
+            newReport.setDoctorId(doctorConnecte.getIdDoctor());
+            newReport.setPatientId(patientId);
+            newReport.setDateReport(LocalDate.parse(date));
+            newReport.setContent(raison);
+
+            byte[] reportBytes = Report.convertByteToArray(newReport);
+            try {
+                byte[] encryptedReportBytes = CryptoManagement.CryptSymDES(sessionKey, reportBytes);
+
+                RequeteADDREPORT requete = new RequeteADDREPORT(encryptedReportBytes,
+                        CryptoManagement.SignData(RecupereClePrivee(), encryptedReportBytes));
+                oss.writeObject(requete);
+
+                ReponseADDREPORT reponse = (ReponseADDREPORT) ois.readObject();
+                byte[] decryptedResponseBytes = CryptoManagement.DecryptSymDES(sessionKey, reponse.getMessage());
+
+                String decryptedResponse = new String(decryptedResponseBytes);
+                if (decryptedResponse.equals("oui")) {
+                    dialogMessage("Succès", "Le rapport a été ajouté avec succès.");
+                } else {
+                    dialogError("Erreur", "Échec de l'ajout du rapport.");
+                }
+            } catch (IOException | ClassNotFoundException | CertificateException | SignatureException |
+                     KeyStoreException | UnrecoverableKeyException | IllegalBlockSizeException | BadPaddingException |
+                     InvalidKeyException | NoSuchAlgorithmException | NoSuchProviderException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+    }
+
+    public void on_pushButtonModifyRapport_clicked(java.awt.event.ActionEvent e) {
+        DefaultTableModel model = (DefaultTableModel) tableRapportMedical.getModel();
+        Object[] rapportSelectionneByte = new Object[model.getColumnCount()];
+        int selectedRow = getSelectionIndexTableRapportMedical();
+
+        if (selectedRow == -1) {
+            dialogError("Modification d un rapport", "Veuillez sélectionner un rapport dans la liste.");
+            return;
+        }
+
+        for (int i = 0; i < model.getColumnCount(); i++) {
+            rapportSelectionneByte[i] = model.getValueAt(selectedRow, i);
+        }
+
+        AjoutRapport dialog = new AjoutRapport(this, rapportSelectionneByte, 2);
+        dialog.setVisible(true);
+
+        if (dialog.isConfirmed()) {
+            boolean result = false;
+            int patientId = Integer.parseInt(dialog.getPatientId());
+            String date = dialog.getDate();
+            String raison = dialog.getRaison();
+
+            System.out.println("\n--- Modification d un rapport ---");
+            System.out.println("Doctor ID = " + doctorConnecte.getIdDoctor());
+            System.out.println("Patient ID = " + patientId);
+            System.out.println("Date: " + date );
+            System.out.println("Raison: " + raison);
         }
     }
 

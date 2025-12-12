@@ -37,22 +37,21 @@ public class PatientDAO {
 
         try {
             String sql = "SELECT id, last_name, first_name, birth_date " +
-                    "FROM patients " +
-                    "ORDER BY last_name, first_name ";
+                    "FROM patients ";
 
             if(psvm != null)
             {
                 String where = " WHERE 1=1 ";
 
                 if(psvm.getIdPatient() != null)
-                    where += " AND id_patient=? ";
+                    where += " AND id=? ";
                 if(psvm.getFirstName() != null)
                     where += " AND first_name=? ";
                 if(psvm.getLastName() != null)
                     where += " AND last_name=? ";
 
                 sql += where;
-                sql += " ORDER BY last_name, first_name;";
+                sql += " ORDER BY id;";
             }
             PreparedStatement stmt = connectDB.getConn().prepareStatement(sql);
 

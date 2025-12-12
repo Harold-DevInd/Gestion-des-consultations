@@ -10,8 +10,14 @@ import hepl.faad.serveurs_java.library.serveur.Requete;
 import hepl.faad.serveurs_java.model.dao.ConsultationDAO;
 import hepl.faad.serveurs_java.model.dao.DoctorDAO;
 import hepl.faad.serveurs_java.model.dao.PatientDAO;
+import hepl.faad.serveurs_java.model.dao.ReportDAO;
+import hepl.faad.serveurs_java.model.entity.Consultation;
 import hepl.faad.serveurs_java.model.entity.Doctor;
+import hepl.faad.serveurs_java.model.entity.Patient;
+import hepl.faad.serveurs_java.model.entity.Report;
+import hepl.faad.serveurs_java.model.viewmodel.ConsultationSearchVM;
 import hepl.faad.serveurs_java.model.viewmodel.DoctorSearchVM;
+import hepl.faad.serveurs_java.model.viewmodel.PatientSearchVM;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import javax.crypto.BadPaddingException;
@@ -23,16 +29,14 @@ import java.net.Socket;
 import java.security.*;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class MRPS implements Protocole {
     private Logger logger;
     private ConsultationDAO consultationDAO;
     private DoctorDAO doctorDAO;
     private PatientDAO patientDAO;
+    private ReportDAO reportDAO;
     private Map<Socket, SecretKey> clientConnecte;
 
     public MRPS(Logger log) {
@@ -40,6 +44,7 @@ public class MRPS implements Protocole {
         this.consultationDAO = new ConsultationDAO();
         this.doctorDAO = new DoctorDAO();
         this.patientDAO = new PatientDAO();
+        this.reportDAO = new ReportDAO();
         this.clientConnecte = new HashMap<Socket, SecretKey>();
     }
 
@@ -156,7 +161,48 @@ public class MRPS implements Protocole {
             logger.Trace(requete.getDoctor().getLastName() + requete.getDoctor().getFirstName() + " non conneté \n");
     }
 
-    private Reponse TraiteRequeteADDREPORT(RequeteADDREPORT requete, Socket socket) {
+    private Reponse TraiteRequeteADDREPORT(RequeteADDREPORT requete, Socket socket) throws IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
+        logger.Trace("RequeteADDREPORT reçue de " + socket);
+        Report rapport = null;
+
+        if(socket != null) {
+            SecretKey cleSession = clientConnecte.get(socket);
+            byte[] reponseByte = CryptoManagement.CryptSymDES(cleSession, "non".getBytes());
+            ReponseADDREPORT reponse = new ReponseADDREPORT(reponseByte);
+
+            if(cleSession != null) {
+                logger.Trace("Client connecté, traitement de la requête...");
+                byte[] rapportByte = CryptoManagement.DecryptSymDES(cleSession, requete.getMessage());
+
+                rapport = Report.convertByteToReport(rapportByte);
+                List<Patient> patients = new PatientDAO().load(new PatientSearchVM(rapport.getPatientId(), null, null));
+                List<Doctor> doctors = new DoctorDAO().load(new DoctorSearchVM(rapport.getDoctorId(), null, null, null));
+
+                if(patients.isEmpty() || doctors.isEmpty()) {
+                    logger.Trace("Patient ou docteur inexistant, rejet de la requête.\n");
+                    return reponse;
+                }
+
+                List<Consultation> consultations = consultationDAO.load(new ConsultationSearchVM(null, doctors.get(0), patients.get(0), null, null));
+
+                if(consultations.isEmpty()) {
+                    logger.Trace("Aucune consultation trouvée entre le patient et le docteur, rejet de la requête.\n");
+                    return reponse;
+                }
+
+                reportDAO.save(rapport);
+                logger.Trace("Rapport ajouté avec succès.\n");
+                reponseByte = CryptoManagement.CryptSymDES(cleSession, "oui".getBytes());
+                reponse = new ReponseADDREPORT(reponseByte);
+
+                return reponse;
+            } else {
+                logger.Trace("Client non connecté, rejet de la requête.\n");
+                return reponse;
+            }
+        } else {
+            logger.Trace("Socket nulle, impossible de traiter la requête.\n");
+        }
         return null;
     }
 
