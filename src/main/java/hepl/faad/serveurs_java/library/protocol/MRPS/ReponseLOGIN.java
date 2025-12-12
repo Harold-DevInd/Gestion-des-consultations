@@ -6,7 +6,7 @@ import javax.crypto.SecretKey;
 
 public class ReponseLOGIN implements Reponse {
     private boolean success;
-    private SecretKey sessionKey;
+    private byte[] sessionKey;
     private long sel;
 
     public ReponseLOGIN() {
@@ -15,12 +15,12 @@ public class ReponseLOGIN implements Reponse {
     public boolean isSuccess() {
         return success;
     }
-    public SecretKey getSessionKey() {return sessionKey;}
+    public byte[] getSessionKey() {return sessionKey;}
     public long getSel() {return sel;}
     public void setSuccess(boolean success) {
         this.success = success;
     }
-    public void setSessionKey(SecretKey sessionKey) {
+    public void setSessionKey(byte[] sessionKey) {
         this.sessionKey = sessionKey;
     }
     public void setSel(long sel) {

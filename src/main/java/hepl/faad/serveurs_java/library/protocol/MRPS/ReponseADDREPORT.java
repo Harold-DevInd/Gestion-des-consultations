@@ -3,13 +3,9 @@ package hepl.faad.serveurs_java.library.protocol.MRPS;
 import hepl.faad.serveurs_java.library.serveur.Reponse;
 
 public class ReponseADDREPORT implements Reponse {
-    private boolean success;
+    private byte[] message;
 
-    public ReponseADDREPORT(boolean success) {
-        this.success = success;
-    }
+    public ReponseADDREPORT(byte[] message) { this.message = message; }
 
-    public boolean isSuccess() {
-        return success;
-    }
+    public byte[] getMessage() { return message; }
 }

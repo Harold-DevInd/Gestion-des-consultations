@@ -1,5 +1,6 @@
 package hepl.faad.serveurs_java.protocol;
 
+import hepl.faad.serveurs_java.library.CryptoManagement;
 import hepl.faad.serveurs_java.library.protocol.MRPS.*;
 import hepl.faad.serveurs_java.library.protocol.Protocole;
 import hepl.faad.serveurs_java.library.serveur.FinConnexionException;
@@ -13,13 +14,15 @@ import hepl.faad.serveurs_java.model.entity.Doctor;
 import hepl.faad.serveurs_java.model.viewmodel.DoctorSearchVM;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 import java.security.*;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -69,12 +72,15 @@ public class MRPS implements Protocole {
         } catch (NoSuchAlgorithmException | NoSuchProviderException | IOException e) {
             logger.Trace("Erreur lors du traitement de la requete : " + requete.getClass().getSimpleName());
             return null;
+        } catch (IllegalBlockSizeException | InvalidKeyException | BadPaddingException | KeyStoreException |
+                 CertificateException e) {
+            throw new RuntimeException(e);
         }
 
         return null;
     }
 
-    private Reponse TraiteRequeteLOGIN(RequeteLOGIN requete, Socket socket) throws NoSuchAlgorithmException, NoSuchProviderException, IOException {
+    private Reponse TraiteRequeteLOGIN(RequeteLOGIN requete, Socket socket) throws NoSuchAlgorithmException, NoSuchProviderException, IOException, CertificateException, KeyStoreException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
         logger.Trace("Requete " + requete.getClass() + " recu de " + socket);
         boolean valide = false;
         ReponseLOGIN reponse = new ReponseLOGIN();
@@ -90,10 +96,12 @@ public class MRPS implements Protocole {
                 reponse.setSuccess(valide);
 
                 if (valide) {
-                    logger.Trace(requete.getIdMedecin() + " correctement loggé \n");
+                    logger.Trace("Docteur avec id : " +requete.getIdMedecin() + " existant \n");
                     reponse.setSel(generateSalt());
                 }
-                logger.Trace("\nErreur de connexion de " + requete.getIdMedecin());
+                else
+                    logger.Trace("\nErreur de connexion de " + requete.getIdMedecin());
+
                 return reponse;
             }
             else {
@@ -115,12 +123,14 @@ public class MRPS implements Protocole {
                 reponse.setSuccess(valide);
 
                 if(valide) {
-                    logger.Trace(doctor.getLastName() + doctor.getFirstName() + " correctement loggé \n");
+                    logger.Trace(doctor.getLastName() + " " + doctor.getFirstName() + " correctement loggé \n");
                     KeyGenerator cleGen = KeyGenerator.getInstance("DES","BC");
                     cleGen.init(new SecureRandom());
                     SecretKey cleSession = cleGen.generateKey();
 
-                    reponse.setSessionKey(cleSession);
+                    byte[] cleSessionChiffre = CryptoManagement.CryptAsymRSA(RecupereClePubliqueClient(), cleSession.getEncoded());
+
+                    reponse.setSessionKey(cleSessionChiffre);
                     reponse.setSel(requete.getSel());
                     clientConnecte.put(socket, cleSession);
                 }
@@ -166,5 +176,30 @@ public class MRPS implements Protocole {
         alea = Math.random();
 
         return (long) (temps + alea);
+    }
+
+    public static PrivateKey RecupereClePrivee() throws KeyStoreException, IOException, UnrecoverableKeyException, NoSuchAlgorithmException, CertificateException {
+        KeyStore ks = KeyStore.getInstance("JKS");
+        ks.load(new FileInputStream("C:\\Users\\harol\\Documents\\HEPL\\Bach 3\\Q1\\Developpement logiciel RTI\\Labo\\Serveurs JAVA\\src\\main\\java\\hepl\\faad\\serveurs_java\\keyStore\\serveur\\KeystoreServeur.jks"),
+                "oracle".toCharArray());
+        PrivateKey cle = (PrivateKey) ks.getKey("serveur","oracle".toCharArray());
+        return cle;
+    }
+    public static PublicKey RecupereClePublique() throws KeyStoreException, IOException, UnrecoverableKeyException, NoSuchAlgorithmException, CertificateException {
+        KeyStore ks = KeyStore.getInstance("JKS");
+        ks.load(new FileInputStream("C:\\Users\\harol\\Documents\\HEPL\\Bach 3\\Q1\\Developpement logiciel RTI\\Labo\\Serveurs JAVA\\src\\main\\java\\hepl\\faad\\serveurs_java\\keyStore\\serveur\\KeystoreServeur.jks"),
+                "oracle".toCharArray());
+        PublicKey cle = (PublicKey) ks.getKey("serveur","oracle".toCharArray());
+        return cle;
+    }
+
+    public static PublicKey RecupereClePubliqueClient() throws KeyStoreException, IOException, CertificateException, NoSuchAlgorithmException {
+    // Récupération de la clé publique du client dans le keystore du serveur
+        KeyStore ks = KeyStore.getInstance("JKS");
+        ks.load(new FileInputStream("C:\\Users\\harol\\Documents\\HEPL\\Bach 3\\Q1\\Developpement logiciel RTI\\Labo\\Serveurs JAVA\\src\\main\\java\\hepl\\faad\\serveurs_java\\keyStore\\serveur\\KeystoreServeur.jks"),
+                "oracle".toCharArray());
+        X509Certificate certif = (X509Certificate)ks.getCertificate("clientDoctor");
+        PublicKey cle = certif.getPublicKey();
+        return cle;
     }
 }

@@ -1,11 +1,13 @@
 package hepl.faad.serveurs_java.clients;
 
+import hepl.faad.serveurs_java.library.CryptoManagement;
 import hepl.faad.serveurs_java.library.protocol.MRPS.*;
 import hepl.faad.serveurs_java.model.entity.Doctor;
 import hepl.faad.serveurs_java.model.entity.Report;
-import hepl.faad.serveurs_java.model.entity.Specialty;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.SecretKey;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -14,7 +16,6 @@ import java.awt.*;
 import java.io.*;
 import java.net.Socket;
 import java.util.Arrays;
-import java.util.Vector;
 import java.security.*;
 import java.security.cert.*;
 
@@ -310,7 +311,8 @@ public class clientRaportMedical extends JFrame {
             reponse = (ReponseLOGIN) ois.readObject();
 
 
-            System.out.println("\nEtape 1 : Reponse : " + reponse.isSuccess()+ " , sel = " + reponse.getSel()+ ", sessionKey = " + reponse.getSessionKey());
+            /*System.out.println("\nEtape 1 : Reponse : " + reponse.isSuccess()+ " , sel = " + reponse.getSel()+
+                    ", sessionKey = " + Arrays.toString(reponse.getSessionKey()));*/
             if(reponse.isSuccess())
             {
                 sel = reponse.getSel();
@@ -329,8 +331,8 @@ public class clientRaportMedical extends JFrame {
                 oss.writeObject(requete2);
                 reponse2 = (ReponseLOGIN) ois.readObject();
 
-                System.out.println("\nEtape 2 : Reponse : " + reponse2.isSuccess()+ " , sel = " + reponse2.getSel()+
-                        ", sessionKey = " + reponse2.getSessionKey());
+                /*System.out.println("\nEtape 2 : Reponse : " + reponse2.isSuccess()+ " , sel = " + reponse2.getSel()+
+                        ", sessionKey = " + Arrays.toString(reponse2.getSessionKey()));*/
                 System.out.println(reponse.isSuccess());
                 if(reponse.isSuccess())
                 {
@@ -339,7 +341,9 @@ public class clientRaportMedical extends JFrame {
                     doctorConnecte.setIdDoctor(MedecinId);
                     doctorConnecte.setLastName(lastName);
                     doctorConnecte.setFirstName(firstName);
-                    sessionKey = reponse2.getSessionKey();
+
+                    byte[] sessionKeyByte = CryptoManagement.DecryptAsymRSA(RecupereClePrivee(), reponse2.getSessionKey());
+                    sessionKey = new javax.crypto.spec.SecretKeySpec(sessionKeyByte, "DES");
                     salt = reponse2.getSel();
                 }
                 else
@@ -352,7 +356,8 @@ public class clientRaportMedical extends JFrame {
         }catch (IOException | ClassNotFoundException ex)
         {
             dialogError("Problème de connexion!","Erreur..." + ex.getMessage());
-        } catch (NoSuchAlgorithmException | NoSuchProviderException ex) {
+        } catch (NoSuchAlgorithmException | NoSuchProviderException | IllegalBlockSizeException | BadPaddingException |
+                 KeyStoreException | InvalidKeyException | CertificateException | UnrecoverableKeyException ex) {
             throw new RuntimeException(ex);
         }
     }
@@ -374,6 +379,31 @@ public class clientRaportMedical extends JFrame {
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+
+    public static PrivateKey RecupereClePrivee() throws KeyStoreException, IOException, UnrecoverableKeyException, NoSuchAlgorithmException, CertificateException {
+        KeyStore ks = KeyStore.getInstance("JKS");
+        ks.load(new FileInputStream("C:\\Users\\harol\\Documents\\HEPL\\Bach 3\\Q1\\Developpement logiciel RTI\\Labo\\Serveurs JAVA\\src\\main\\java\\hepl\\faad\\serveurs_java\\keyStore\\client\\KeystoreClientDoctor.jks"),
+                "oracle".toCharArray());
+        PrivateKey cle = (PrivateKey) ks.getKey("clientDoctor","oracle".toCharArray());
+        return cle;
+    }
+    public static PublicKey RecupereClePublique() throws KeyStoreException, IOException, UnrecoverableKeyException, NoSuchAlgorithmException, CertificateException {
+        KeyStore ks = KeyStore.getInstance("JKS");
+        ks.load(new FileInputStream("C:\\Users\\harol\\Documents\\HEPL\\Bach 3\\Q1\\Developpement logiciel RTI\\Labo\\Serveurs JAVA\\src\\main\\java\\hepl\\faad\\serveurs_java\\keyStore\\client\\KeystoreClientDoctor.jks"),
+                "oracle".toCharArray());
+        PublicKey cle = (PublicKey) ks.getKey("clientDoctor","oracle".toCharArray());
+        return cle;
+    }
+    public static PublicKey RecupereClePubliqueServeur() throws KeyStoreException, IOException, CertificateException, NoSuchAlgorithmException {
+        // Récupération de la clé publique du client dans le keystore du serveur
+        KeyStore ks = KeyStore.getInstance("JKS");
+        ks.load(new FileInputStream("C:\\Users\\harol\\Documents\\HEPL\\Bach 3\\Q1\\Developpement logiciel RTI\\Labo\\Serveurs JAVA\\src\\main\\java\\hepl\\faad\\serveurs_java\\keyStore\\client\\KeystoreClientDoctor.jks"),
+                "oracle".toCharArray());
+        X509Certificate certif = (X509Certificate)ks.getCertificate("serveur");
+        PublicKey cle = certif.getPublicKey();
+        return cle;
     }
 
     public static void main(String[] args) {
