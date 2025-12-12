@@ -45,6 +45,11 @@
             <version>8.0.33</version>
             <scope>compile</scope> <!-- ou compile si utilisée ailleurs -->
         </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk18on</artifactId>
+            <version>1.78</version>
+        </dependency>
     </dependencies>
 
     <build>

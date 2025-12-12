@@ -4,14 +4,14 @@ import hepl.faad.serveurs_java.library.protocol.MRPS.*;
 import hepl.faad.serveurs_java.model.entity.Doctor;
 import hepl.faad.serveurs_java.model.entity.Report;
 import hepl.faad.serveurs_java.model.entity.Specialty;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+import javax.crypto.SecretKey;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.Vector;
@@ -42,6 +42,8 @@ public class clientRaportMedical extends JFrame {
     private Report reportEnCours;
     private ObjectOutputStream oss;
     private ObjectInputStream ois;
+    SecretKey sessionKey;
+    long salt;
 
     public clientRaportMedical() {
         super("Application de Gestion des Rapports");
@@ -129,6 +131,7 @@ public class clientRaportMedical extends JFrame {
 
         logoutOk();
         addListeners();
+        Security.addProvider(new BouncyCastleProvider());
     }
 
     private void addListeners() {
@@ -274,6 +277,9 @@ public class clientRaportMedical extends JFrame {
         pushButtonLogout.setEnabled(false);
         pushButtonSearch.setEnabled(false);
         pushButtonModify.setEnabled(false);
+        nomField.setEditable(true);
+        prenomField.setEditable(true);
+        idField.setEditable(true);
         //clearTableRapportMedical();
     }
     // ==================================================================================
@@ -286,6 +292,8 @@ public class clientRaportMedical extends JFrame {
         int MedecinId = getMedecinId();
         String ipServeur = "127.0.0.1";
         int portServeur = 50060;
+        long sel;
+        ReponseLOGIN reponse, reponse2;
 
         System.out.println("\nRequete : " + RequeteLOGIN.class.getSimpleName());
         System.out.println("lastName = " + lastName);
@@ -297,25 +305,55 @@ public class clientRaportMedical extends JFrame {
             oss = new ObjectOutputStream(socket.getOutputStream());
             ois = new ObjectInputStream(socket.getInputStream());
 
-            RequeteLOGIN requete = new RequeteLOGIN(MedecinId, lastName, firstName, null);
+            RequeteLOGIN requete = new RequeteLOGIN(MedecinId, 0, null);
             oss.writeObject(requete);
-            ReponseLOGIN reponse = (ReponseLOGIN) ois.readObject();
+            reponse = (ReponseLOGIN) ois.readObject();
 
-            System.out.println(Arrays.toString(reponse.getSessionKey()));
-            System.out.println(reponse.isSuccess());
+
+            System.out.println("\nEtape 1 : Reponse : " + reponse.isSuccess()+ " , sel = " + reponse.getSel()+ ", sessionKey = " + reponse.getSessionKey());
             if(reponse.isSuccess())
             {
-                dialogMessage("Sucess", "Connection reussie");
-                loginOk();
-                doctorConnecte.setIdDoctor(MedecinId);
-                doctorConnecte.setLastName(lastName);
-                doctorConnecte.setFirstName(firstName);
+                sel = reponse.getSel();
+                byte[] digestClient;
+                MessageDigest md = MessageDigest.getInstance("SHA-1","BC");
+                md.update(lastName.getBytes());
+                md.update(firstName.getBytes());
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                DataOutputStream dos = new DataOutputStream(baos);
+                dos.write(MedecinId);
+                dos.writeLong(sel);
+                md.update(baos.toByteArray());
+                digestClient = md.digest();
+
+                RequeteLOGIN requete2 = new RequeteLOGIN(MedecinId, sel, digestClient);
+                oss.writeObject(requete2);
+                reponse2 = (ReponseLOGIN) ois.readObject();
+
+                System.out.println("\nEtape 2 : Reponse : " + reponse2.isSuccess()+ " , sel = " + reponse2.getSel()+
+                        ", sessionKey = " + reponse2.getSessionKey());
+                System.out.println(reponse.isSuccess());
+                if(reponse.isSuccess())
+                {
+                    dialogMessage("Sucess", "Connection reussie");
+                    loginOk();
+                    doctorConnecte.setIdDoctor(MedecinId);
+                    doctorConnecte.setLastName(lastName);
+                    doctorConnecte.setFirstName(firstName);
+                    sessionKey = reponse2.getSessionKey();
+                    salt = reponse2.getSel();
+                }
+                else
+                    dialogError("Erreur", "Erreur de connexion");
             }
             else
                 dialogError("Erreur", "Erreur de connexion");
+
+
         }catch (IOException | ClassNotFoundException ex)
         {
             dialogError("Problème de connexion!","Erreur..." + ex.getMessage());
+        } catch (NoSuchAlgorithmException | NoSuchProviderException ex) {
+            throw new RuntimeException(ex);
         }
     }
 

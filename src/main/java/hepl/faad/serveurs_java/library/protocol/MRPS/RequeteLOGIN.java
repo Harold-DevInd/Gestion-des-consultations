@@ -4,28 +4,23 @@ import hepl.faad.serveurs_java.library.serveur.Requete;
 
 public class RequeteLOGIN implements Requete {
     private int idMedecin;
-    private String nom;
-    private String password;
     private byte[] disget;
+    private long sel;
 
-    public RequeteLOGIN(int id, String nom, String password, byte[] disget) {
+    public RequeteLOGIN() {}
+
+    public RequeteLOGIN(int id, long sel, byte[] disget) {
         this.idMedecin = id;
-        this.nom = nom;
-        this.password = password;
+        this.sel = sel;
         this.disget = disget;
     }
 
     public int getIdMedecin() {
         return idMedecin;
     }
-
-    public String getNom() {
-        return nom;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
     public byte[] getDisget() { return disget; }
+    public long getSel() {
+        return sel;
+    }
+
 }

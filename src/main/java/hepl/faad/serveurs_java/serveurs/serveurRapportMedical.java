@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.security.*;
 import java.security.cert.*;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 public class serveurRapportMedical implements Logger {
     ThreadServeur threadServeur;
@@ -54,20 +55,6 @@ public class serveurRapportMedical implements Logger {
     }
 
     public static Map<String, String> lireConfiguration(String cheminFichier) throws IOException {
-        Map<String, String> config = new HashMap<>();
-
-        try (BufferedReader lecteur = new BufferedReader(new FileReader(cheminFichier))) {
-            String ligne;
-            while ((ligne = lecteur.readLine()) != null) {
-                ligne = ligne.trim();
-                if (!ligne.isEmpty() && ligne.contains("=")) {
-                    String[] parts = ligne.split("=", 2);
-                    String cle = parts[0].trim();
-                    String valeur = parts[1].trim();
-                    config.put(cle, valeur);
-                }
-            }
-        }
-        return config;
+        return serveurConsultation.lireConfiguration(cheminFichier);
     }
 }
