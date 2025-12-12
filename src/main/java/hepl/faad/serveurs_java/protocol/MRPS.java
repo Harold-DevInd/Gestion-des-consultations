@@ -20,7 +20,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.security.*;
-import java.sql.SQLException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -31,14 +30,14 @@ public class MRPS implements Protocole {
     private ConsultationDAO consultationDAO;
     private DoctorDAO doctorDAO;
     private PatientDAO patientDAO;
-    private Map<Socket, SecretKey> clientConnecté;
+    private Map<Socket, SecretKey> clientConnecte;
 
     public MRPS(Logger log) {
         this.logger = log;
         this.consultationDAO = new ConsultationDAO();
         this.doctorDAO = new DoctorDAO();
         this.patientDAO = new PatientDAO();
-        this.clientConnecté = new HashMap<Socket, SecretKey>();
+        this.clientConnecte = new HashMap<Socket, SecretKey>();
     }
 
     @Override
@@ -123,7 +122,7 @@ public class MRPS implements Protocole {
 
                     reponse.setSessionKey(cleSession);
                     reponse.setSel(requete.getSel());
-                    clientConnecté.put(socket, cleSession);
+                    clientConnecte.put(socket, cleSession);
                 }
                 else
                     logger.Trace("\nErreur de connexion de " + requete.getIdMedecin());
@@ -140,7 +139,7 @@ public class MRPS implements Protocole {
 
         if(socket != null) {
             logger.Trace(requete.getDoctor().getLastName() + requete.getDoctor().getFirstName() + " correctement deconnecte\n");
-            clientConnecté.remove(socket);
+            clientConnecte.remove(socket);
             throw new FinConnexionException(null);
         }
         else
