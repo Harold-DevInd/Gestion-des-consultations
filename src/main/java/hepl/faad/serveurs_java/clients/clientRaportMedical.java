@@ -101,17 +101,6 @@ public class clientRaportMedical extends JFrame {
             }
         };
 
-        tableData = new Object[][]{
-                {"001", "2023-10-01", "Martin", "Dr. Dupont",
-                        "Contenu détaillé du rapport R001. C'est le texte complet du document qui sera affiché dans le champ ci-dessous. Il peut être très long."},
-                {"002", "2023-10-15", "Pierre", "Dr. Dupont",
-                        "Contenu détaillé du rapport R002. Le patient a montré des améliorations significatives ce mois-ci. Les tests sont positifs."},
-                {"003", "2023-11-20", "Julien", "Dr. Smith",
-                        "Contenu détaillé du rapport R003. Tout est conforme. Le patient est libéré. Fin du suivi."}
-        };
-        for (Object[] row : tableData) {
-            tableModelRapportMedical.addRow(row);
-        }
         tableRapportMedical = new JTable(tableModelRapportMedical);
 
         tableRapportMedical.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -187,7 +176,7 @@ public class clientRaportMedical extends JFrame {
                 if (selectedRow != -1) {
                     int modelRow = tableRapportMedical.convertRowIndexToModel(selectedRow);
 
-                    String content = (String) tableData[modelRow][4];
+                    String content = (String) tableModelRapportMedical.getValueAt(modelRow, 4);
 
                     setRaportContent(content);
                     contentArea.setCaretPosition(0);
@@ -219,10 +208,7 @@ public class clientRaportMedical extends JFrame {
     //                                  MÉTHODES UTILITAIRES
     // ==================================================================================
 
-    /**
-     * Ajoute une ligne à la table des consultations.
-     */
-    public void addTupleTableRapport(int id, String patient, String doctor, String date, String content) {
+    public void addTupleTableRapport(int id, Integer patient, Integer doctor, String date, String content) {
         Object[] rowData = {id, date, patient, doctor, content};
 
         tableModelRapportMedical.addRow(rowData);
@@ -291,8 +277,9 @@ public class clientRaportMedical extends JFrame {
         nomField.setEditable(true);
         prenomField.setEditable(true);
         idField.setEditable(true);
-        //clearTableRapportMedical();
+        clearTableRapportMedical();
     }
+
     // ==================================================================================
     //                                  GESTION DES BOUTONS
     // ==================================================================================
@@ -507,8 +494,8 @@ public class clientRaportMedical extends JFrame {
             clearTableRapportMedical();
 
             for (Report report : listeReport) {
-                addTupleTableRapport(report.getIdReport(), "Patient " + report.getPatientId(),
-                        "Doctor " + report.getDoctorId(), report.getDateReport().toString(),
+                addTupleTableRapport(report.getIdReport(), report.getPatientId(),
+                        report.getDoctorId(), report.getDateReport().toString(),
                         report.getContent());
             }
 
