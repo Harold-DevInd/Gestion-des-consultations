@@ -18,12 +18,10 @@ import hepl.faad.serveurs_java.model.entity.Report;
 import hepl.faad.serveurs_java.model.viewmodel.ConsultationSearchVM;
 import hepl.faad.serveurs_java.model.viewmodel.DoctorSearchVM;
 import hepl.faad.serveurs_java.model.viewmodel.PatientSearchVM;
+import hepl.faad.serveurs_java.model.viewmodel.ReportSearchVM;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
+import javax.crypto.*;
 import java.io.*;
 import java.net.Socket;
 import java.security.*;
@@ -210,7 +208,42 @@ public class MRPS implements Protocole {
         return null;
     }
 
-    private Reponse TraiteRequeteLISTREPORTS(RequeteLISTREPORTS requete, Socket socket) {
+    private Reponse TraiteRequeteLISTREPORTS(RequeteLISTREPORTS requete, Socket socket) throws IllegalBlockSizeException, BadPaddingException, InvalidKeyException, IOException, NoSuchAlgorithmException, NoSuchProviderException {
+        logger.Trace("RequeteLISTREPORTS reçue de " + socket);
+        Integer patientId;
+
+        if(socket != null) {
+            SecretKey cleSession = clientConnecte.get(socket);
+
+            byte[] requeteDechriffree = CryptoManagement.DecryptSymDES(cleSession, requete.getMessage());
+            patientId = Integer.parseInt(new String(requeteDechriffree));
+
+
+            logger.Trace("Patient Id : " + patientId);
+            if(patientId == -1){
+                logger.Trace("Patient Id non passe en parametre pour la requete.");
+                patientId = null;
+            }
+
+            List<Report> reports = reportDAO.load(new ReportSearchVM(null, null, patientId));
+
+            List<byte[]> reportsByteChiffre = new ArrayList<>();
+            for(Report r : reports) {
+                reportsByteChiffre.add(CryptoManagement.CryptSymDES(cleSession, Report.convertReportToByte(r)));
+            }
+
+            Mac hm = Mac.getInstance("HMAC-MD5","BC");
+            hm.init(cleSession);
+            for(byte[] rche : reportsByteChiffre)
+                hm.update(rche);
+
+            byte[] hmac = hm.doFinal();
+            ReponseLISTREPORTS reponse = new ReponseLISTREPORTS(reportsByteChiffre, hmac);
+            logger.Trace("Envoi de " + reports.size() + " rapports au client.\n");
+            return reponse;
+        }
+        logger.Trace("Socket nulle, impossible de traiter la requête.\n");
+
         return null;
     }
 

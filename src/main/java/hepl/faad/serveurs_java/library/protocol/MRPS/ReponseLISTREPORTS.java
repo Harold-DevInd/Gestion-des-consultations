@@ -2,17 +2,17 @@ package hepl.faad.serveurs_java.library.protocol.MRPS;
 
 import hepl.faad.serveurs_java.library.serveur.Reponse;
 
-import java.io.Serializable;
+import java.util.List;
 
 public class ReponseLISTREPORTS implements Reponse {
-    private byte[] listeReports;
+    private List<byte[]> listeReports;
     private byte[] hmacReponse;
 
-    public ReponseLISTREPORTS(byte[] listeReports, byte[] hmacReponse) {
+    public ReponseLISTREPORTS(List<byte[]> listeReports, byte[] hmacReponse) {
         this.listeReports = listeReports;
         this.hmacReponse = hmacReponse;
     }
 
-    public byte[] getListeReports() { return listeReports; }
+    public List<byte[]> getListeReports() { return listeReports; }
     public byte[] getHmacReponse() { return hmacReponse; }
 }

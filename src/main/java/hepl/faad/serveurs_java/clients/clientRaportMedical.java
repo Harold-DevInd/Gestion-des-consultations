@@ -18,7 +18,7 @@ import java.net.Socket;
 import java.security.*;
 import java.security.cert.*;
 import java.time.LocalDate;
-import java.util.Arrays;
+import java.util.ArrayList;
 
 public class clientRaportMedical extends JFrame {
     private JPanel searchControlPanel;
@@ -141,7 +141,7 @@ public class clientRaportMedical extends JFrame {
     private void addListeners() {
         pushButtonLogin.addActionListener(this::on_pushButtonLogin_clicked);
         pushButtonLogout.addActionListener(this::on_pushButtonLogout_clicked);
-        pushButtonSearch.addActionListener(e -> {});
+        pushButtonSearch.addActionListener(this::on_pushRechercheRapport_clicked);
         pushButtonAdd.addActionListener(this::on_pushButtonAddRapport_clicked);
         pushButtonModify.addActionListener(this::on_pushButtonModifyRapport_clicked);
     }
@@ -254,7 +254,10 @@ public class clientRaportMedical extends JFrame {
     public int getMedecinId() {
         return Integer.parseInt(idField.getText().trim());
     }
-    public int getPatientIdForSearch() {
+    public Integer getPatientIdForSearch() {
+        if(idPatientField.getText().trim().isEmpty()) {
+            return -1;
+        }
         return Integer.parseInt(idPatientField.getText().trim());
     }
     public void setPatientIdForSearch(int id) {
@@ -411,7 +414,7 @@ public class clientRaportMedical extends JFrame {
             newReport.setDateReport(LocalDate.parse(date));
             newReport.setContent(raison);
 
-            byte[] reportBytes = Report.convertByteToArray(newReport);
+            byte[] reportBytes = Report.convertReportToByte(newReport);
             try {
                 byte[] encryptedReportBytes = CryptoManagement.CryptSymDES(sessionKey, reportBytes);
 
@@ -464,6 +467,53 @@ public class clientRaportMedical extends JFrame {
             System.out.println("Patient ID = " + patientId);
             System.out.println("Date: " + date );
             System.out.println("Raison: " + raison);
+        }
+    }
+
+    public void on_pushRechercheRapport_clicked(java.awt.event.ActionEvent e)  {
+        Integer patientId = getPatientIdForSearch();
+
+        if(patientId == null) {
+            patientId = -1;
+        }
+
+        RequeteLISTREPORTS requete = null;
+        try {
+            requete = new RequeteLISTREPORTS(CryptoManagement.CryptSymDES(sessionKey, String.valueOf(patientId).getBytes()));
+
+            oss.writeObject(requete);
+            ReponseLISTREPORTS reponse = (ReponseLISTREPORTS) ois.readObject();
+            java.util.List<byte[]> decryptedResponseBytes = new ArrayList<>();
+
+            for(byte[] reportData : reponse.getListeReports()) {
+                byte[] decryptedBytes = CryptoManagement.DecryptSymDES(sessionKey, reportData);
+                decryptedResponseBytes.add(decryptedBytes);
+            }
+
+            java.util.List<Report> listeReport = new ArrayList<>();
+            for(byte[] reportBytes : decryptedResponseBytes) {
+                ByteArrayInputStream bais = new ByteArrayInputStream(reportBytes);
+                ObjectInputStream oisReport = new ObjectInputStream(bais);
+                Report report = (Report) oisReport.readObject();
+                listeReport.add(report);
+            }
+
+            if(listeReport.isEmpty()) {
+                dialogMessage("Information", "Aucun rapport trouvé pour le patient ID: " + patientId);
+                return;
+            }
+
+            dialogMessage("Succès", "Rapports récupérés avec succès.");
+            clearTableRapportMedical();
+
+            for (Report report : listeReport) {
+                addTupleTableRapport(report.getIdReport(), "Patient " + report.getPatientId(),
+                        "Doctor " + report.getDoctorId(), report.getDateReport().toString(),
+                        report.getContent());
+            }
+
+        } catch (IOException | ClassNotFoundException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException ex) {
+            throw new RuntimeException(ex);
         }
     }
 

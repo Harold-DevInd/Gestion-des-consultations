@@ -36,11 +36,11 @@ public class ReportDAO {
         ArrayList<Report> reports = new ArrayList<>();
 
         try {
-            String sql = "SELECT id, doctor_id, patient_id, date_report, content" +
-                    "FROM reports ";
+            String sql = "SELECT id, doctor_id, patient_id, date_report, content " +
+                    " FROM reports ";
 
             if (rsvm != null) {
-                String where = " WHERE 1 = 1 AN";
+                String where = " WHERE 1 = 1 ";
 
                 if(rsvm.getIdReport() != null)
                     where += " AND id = ? ";

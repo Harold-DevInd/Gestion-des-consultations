@@ -35,7 +35,7 @@ public class Report implements Entity,Serializable {
         }
     }
 
-    public static byte[] convertByteToArray(Report newReport) {
+    public static byte[] convertReportToByte(Report newReport) {
         try (java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
              java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(baos)) {
 
