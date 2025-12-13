@@ -275,8 +275,13 @@ public class clientRaportMedical extends JFrame {
         pushButtonAdd.setEnabled(false);
         pushButtonModify.setEnabled(false);
         nomField.setEditable(true);
+        nomField.setText("");
         prenomField.setEditable(true);
+        prenomField.setText("");
         idField.setEditable(true);
+        idField.setText("");
+        idPatientField.setText("");
+        contentArea.setText("");
         clearTableRapportMedical();
     }
 
@@ -379,12 +384,11 @@ public class clientRaportMedical extends JFrame {
     }
 
     public void on_pushButtonAddRapport_clicked(java.awt.event.ActionEvent e) {
-
+        System.out.println("\nRequete : " + RequeteADDREPORT.class.getSimpleName());
         AjoutRapport dialog = new AjoutRapport(this, null, 1);
         dialog.setVisible(true);
 
         if (dialog.isConfirmed()) {
-            String result = "non";
             int patientId = Integer.parseInt(dialog.getPatientId());
             String date = dialog.getDate();
             String raison = dialog.getRaison();
@@ -427,6 +431,7 @@ public class clientRaportMedical extends JFrame {
     }
 
     public void on_pushButtonModifyRapport_clicked(java.awt.event.ActionEvent e) {
+        System.out.println("\nRequete : " + RequeteEDITREPORT.class.getSimpleName());
         DefaultTableModel model = (DefaultTableModel) tableRapportMedical.getModel();
         Object[] rapportSelectionneByte = new Object[model.getColumnCount()];
         int selectedRow = getSelectionIndexTableRapportMedical();
@@ -444,7 +449,6 @@ public class clientRaportMedical extends JFrame {
         dialog.setVisible(true);
 
         if (dialog.isConfirmed()) {
-            boolean result = false;
             int patientId = Integer.parseInt(dialog.getPatientId());
             String date = dialog.getDate();
             String raison = dialog.getRaison();
@@ -458,6 +462,7 @@ public class clientRaportMedical extends JFrame {
     }
 
     public void on_pushRechercheRapport_clicked(java.awt.event.ActionEvent e)  {
+        System.out.println("\nRequete : " + RequeteLISTREPORTS.class.getSimpleName());
         Integer patientId = getPatientIdForSearch();
 
         if(patientId == null) {
