@@ -98,8 +98,8 @@ public class ReportDAO {
         }
     }
 
-    public void save(Report rep) {
-        if (rep == null) return;
+    public boolean save(Report rep) {
+        if (rep == null) return false;
         try {
             if (rep.getIdReport() != null) {
                 // Update
@@ -113,6 +113,7 @@ public class ReportDAO {
                 pStmt.setInt(3, rep.getIdReport());
                 pStmt.executeUpdate();
                 pStmt.close();
+                return true;
             } else {
                 // Insert
                 String sql = "INSERT INTO reports (doctor_id, patient_id, date_report, content) " +
@@ -133,26 +134,33 @@ public class ReportDAO {
 
                 rs.close();
                 pStmt.close();
+
+                return true;
             }
         } catch (SQLException ex) {
             Logger.getLogger(ReportDAO.class.getName()).log(Level.SEVERE, null, ex);
         }
+        return false;
     }
 
-    public void delete(Report rep) {
-        if (rep != null && rep.getIdReport() != null) this.delete(rep.getIdReport());
+    public boolean delete(Report rep) {
+        if (rep != null && rep.getIdReport() != null)
+            return this.delete(rep.getIdReport());
+        return false;
     }
 
-    public void delete(Integer id) {
-        if (id == null) return;
+    public boolean delete(Integer id) {
+        if (id == null) return false;
         try {
             String sql = "DELETE FROM reports WHERE id = ?";
             PreparedStatement stmt = connectDB.getConn().prepareStatement(sql);
             stmt.setInt(1, id);
             stmt.executeUpdate();
             stmt.close();
+            return true;
         } catch (SQLException ex) {
             Logger.getLogger(ReportDAO.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
         }
     }
 }

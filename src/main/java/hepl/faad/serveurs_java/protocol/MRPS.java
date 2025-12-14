@@ -76,7 +76,7 @@ public class MRPS implements Protocole {
             logger.Trace("Erreur lors du traitement de la requete : " + requete.getClass().getSimpleName());
             return null;
         } catch (IllegalBlockSizeException | InvalidKeyException | BadPaddingException | KeyStoreException |
-                 CertificateException e) {
+                 CertificateException | UnrecoverableKeyException | SignatureException e) {
             throw new RuntimeException(e);
         }
 
@@ -159,14 +159,22 @@ public class MRPS implements Protocole {
             logger.Trace(requete.getDoctor().getLastName() + requete.getDoctor().getFirstName() + " non conneté \n");
     }
 
-    private Reponse TraiteRequeteADDREPORT(RequeteADDREPORT requete, Socket socket) throws IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
+    private Reponse TraiteRequeteADDREPORT(RequeteADDREPORT requete, Socket socket) throws IllegalBlockSizeException, BadPaddingException, InvalidKeyException, UnrecoverableKeyException, CertificateException, KeyStoreException, IOException, NoSuchAlgorithmException, SignatureException, NoSuchProviderException {
         logger.Trace("RequeteADDREPORT reçue de " + socket);
         Report rapport = null;
 
         if(socket != null) {
+            logger.Trace("Client connecté, traitement de la requête...");
             SecretKey cleSession = clientConnecte.get(socket);
             byte[] reponseByte = CryptoManagement.CryptSymDES(cleSession, "non".getBytes());
             ReponseADDREPORT reponse = new ReponseADDREPORT(reponseByte);
+
+            if(!CryptoManagement.VerifySignature(RecupereClePubliqueClient(), requete.getMessage(), requete.getSignature())) {
+                logger.Trace("Signature invalidée, rejet de la requête.\n");
+                return reponse;
+            }
+            else
+                logger.Trace("Signature validée.");
 
             if(cleSession != null) {
                 logger.Trace("Client connecté, traitement de la requête...");
@@ -204,7 +212,54 @@ public class MRPS implements Protocole {
         return null;
     }
 
-    private Reponse TraiteRequeteEDITREPORT(RequeteEDITREPORT requete, Socket socket) {
+    private Reponse TraiteRequeteEDITREPORT(RequeteEDITREPORT requete, Socket socket) throws IllegalBlockSizeException, BadPaddingException, InvalidKeyException, UnrecoverableKeyException, CertificateException, KeyStoreException, IOException, NoSuchAlgorithmException, SignatureException, NoSuchProviderException {
+        logger.Trace("RequeteEDITREPORT reçue de " + socket);
+        Report rapport = null;
+
+        if(socket != null) {
+            logger.Trace("Client connecté, traitement de la requête...");
+            SecretKey cleSession = clientConnecte.get(socket);
+            byte[] reponseByte = CryptoManagement.CryptSymDES(cleSession, "non".getBytes());
+            ReponseEDITREPORT reponse = new ReponseEDITREPORT(reponseByte);
+
+            if(!CryptoManagement.VerifySignature(RecupereClePubliqueClient(), requete.getMessage(), requete.getSignature())) {
+                logger.Trace("Signature invalidée, rejet de la requête.\n");
+                return reponse;
+            }
+            else
+                logger.Trace("Signature validée.");
+
+            if(cleSession != null) {
+                byte[] rapportByte = CryptoManagement.DecryptSymDES(cleSession, requete.getMessage());
+
+                rapport = Report.convertByteToReport(rapportByte);
+
+                System.out.println("\n--- Rapport modifie recu ---");
+                System.out.println("Report ID = " + rapport.getIdReport());
+                System.out.println("Doctor ID = " + rapport.getDoctorId());
+                System.out.println("Patient ID = " + rapport.getPatientId());
+                System.out.println("Date: " + rapport.getDateReport() );
+                System.out.println("Raison: " + rapport.getContent());
+
+                boolean resultat = reportDAO.save(rapport);
+
+                if(!resultat) {
+                    logger.Trace("Echec de la modification du rapport, rejet de la requête.\n");
+                    return reponse;
+                }
+
+                logger.Trace("Rapport modifié avec succès.\n");
+                reponseByte = CryptoManagement.CryptSymDES(cleSession, "oui".getBytes());
+                reponse = new ReponseEDITREPORT(reponseByte);
+
+                return reponse;
+            } else {
+                logger.Trace("Client non connecté, rejet de la requête.\n");
+                return reponse;
+            }
+        } else {
+            logger.Trace("Socket nulle, impossible de traiter la requête.\n");
+        }
         return null;
     }
 

@@ -22,13 +22,4 @@ public class ReportSearchVM {
     public Integer getIdPatient() {
         return idPatient;
     }
-    public void setIdReport(Integer idReport) {
-        this.idReport = idReport;
-    }
-    public void setIdDoctor(Integer idDoctor) {
-        this.idDoctor = idDoctor;
-    }
-    public void setIdPatient(Integer idPatient) {
-        this.idPatient = idPatient;
-    }
 }

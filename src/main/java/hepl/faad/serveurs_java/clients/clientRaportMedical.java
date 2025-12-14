@@ -419,6 +419,7 @@ public class clientRaportMedical extends JFrame {
                 String decryptedResponse = new String(decryptedResponseBytes);
                 if (decryptedResponse.equals("oui")) {
                     dialogMessage("Succès", "Le rapport a été ajouté avec succès.");
+                    on_pushRechercheRapport_clicked(e);
                 } else {
                     dialogError("Erreur", "Échec de l'ajout du rapport.");
                 }
@@ -454,10 +455,41 @@ public class clientRaportMedical extends JFrame {
             String raison = dialog.getRaison();
 
             System.out.println("\n--- Modification d un rapport ---");
+            System.out.println("Report ID = " + rapportSelectionneByte[0]);
             System.out.println("Doctor ID = " + doctorConnecte.getIdDoctor());
             System.out.println("Patient ID = " + patientId);
             System.out.println("Date: " + date );
             System.out.println("Raison: " + raison);
+
+            Report updatedReport = new Report();
+            updatedReport.setIdReport((Integer) rapportSelectionneByte[0]);
+            updatedReport.setDoctorId(doctorConnecte.getIdDoctor());
+            updatedReport.setPatientId(patientId);
+            updatedReport.setDateReport(LocalDate.parse(date));
+            updatedReport.setContent(raison);
+
+            byte[] updateReportBytes = Report.convertReportToByte(updatedReport);
+            try{
+                byte[] encryptedUpdateReportBytes = CryptoManagement.CryptSymDES(sessionKey, updateReportBytes);
+
+                RequeteEDITREPORT requete = new RequeteEDITREPORT(encryptedUpdateReportBytes,
+                        CryptoManagement.SignData(RecupereClePrivee(), encryptedUpdateReportBytes));
+
+                oss.writeObject(requete);
+                ReponseEDITREPORT reponse = (ReponseEDITREPORT) ois.readObject();
+                System.out.println("\n--- Modification d un rapport ---");
+                byte[] decryptedResponseBytes = CryptoManagement.DecryptSymDES(sessionKey, reponse.getMessage());
+                String decryptedResponse = new String(decryptedResponseBytes);
+                if(decryptedResponse.equals("oui")) {
+                    dialogMessage("Succès", "Le rapport a été modifié avec succès.");
+                    on_pushRechercheRapport_clicked(e);
+                } else {
+                    dialogError("Erreur", "Échec de la modification du rapport.");
+                }
+            }
+            catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
         }
     }
 
