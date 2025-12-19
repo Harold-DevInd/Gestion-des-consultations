@@ -6,6 +6,7 @@ module hepl.faad.serveurs_java {
     requires mysql.connector.j;
     requires java.desktop;
     requires org.bouncycastle.provider;
+    requires jdk.httpserver;
 
 
     opens hepl.faad.serveurs_java to javafx.fxml;
