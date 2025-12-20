@@ -72,8 +72,6 @@ public class ConsultationDAO {
                         sql += " ORDER BY c_id;";
                     }
 
-                    System.out.println("\n****Requette:" +sql+ "****\n");
-
             PreparedStatement stmt = connectDB.getConn().prepareStatement(sql);
 
             if(csvm != null)

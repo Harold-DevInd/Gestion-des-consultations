@@ -11,7 +11,6 @@ import hepl.faad.serveurs_java.model.entity.Consultation;
 import hepl.faad.serveurs_java.model.entity.Doctor;
 import hepl.faad.serveurs_java.model.entity.Patient;
 import hepl.faad.serveurs_java.model.entity.Specialty;
-import hepl.faad.serveurs_java.model.viewmodel.ConsultationSearchVM;
 import hepl.faad.serveurs_java.model.viewmodel.DoctorSearchVM;
 
 import java.io.BufferedReader;
@@ -170,75 +169,114 @@ public class serveurWeb {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
             String requestMethod = exchange.getRequestMethod();
-            if (requestMethod.equalsIgnoreCase("GET"))
-            {
+            if (requestMethod.equalsIgnoreCase("GET")) {
                 System.out.println("--- Requête GET reçue (obtenir la liste des consultations) ---");
                 Map<String, String> queryParams = parseQueryParams(exchange.getRequestURI().getQuery());
                 ArrayList<Consultation> consultations;
-                ConsultationSearchVM dsvm = new ConsultationSearchVM();
-                Patient patient = new Patient();
-                Doctor doctor = new Doctor();
 
+                consultations = consultationDAO.load();
                 if (queryParams.containsKey("date"))
                 {
                     LocalDate dateDebut = LocalDate.parse(queryParams.get("date"));
                     System.out.println("Filtrage par dateDebut ");
-                    dsvm.setDateDebutConsultation(dateDebut);
+                    consultations.removeIf(consultation -> consultation.getDateConsultation().isBefore(dateDebut));
                 }
                 if (queryParams.containsKey("doctor"))
                 {
                     String doctorName = queryParams.get("doctor");
                     System.out.println("Filtrage par doctorName ");
-                    doctor.setLastName(doctorName);
-                    dsvm.setDoctor(doctor);
+                    consultations.removeIf(consultation -> !consultation.getDoctor().getLastName().equals(doctorName));
                 }
                 if (queryParams.containsKey("specialty"))
                 {
                     String specialtyName = queryParams.get("specialty");
-                    System.out.println("Filtrage par specialtyName");
-                    doctor.getSpecialty().setNom(specialtyName);
-                    dsvm.setDoctor(doctor);
+                    System.out.println("Filtrage par specialtyName [" + specialtyName+"]");
+                    consultations.removeIf(consultation -> consultation.getDoctor() == null
+                            || consultation.getDoctor().getSpecialty() == null
+                            || consultation.getDoctor().getSpecialty().getNom() == null
+                            || !consultation.getDoctor().getSpecialty().getNom().equals(specialtyName));
                 }
                 if (queryParams.containsKey("patientId"))
                 {
                     int patientId = Integer.parseInt(queryParams.get("patientId"));
                     System.out.println("Filtrage par patientId ");
-                    patient.setIdPatient(patientId);
-                    dsvm.setPatient(patient);
+                    consultations.removeIf(consultation -> !consultation.getPatient().getIdPatient().equals(patientId));
                 }
 
-                consultations = consultationDAO.load(dsvm);
                 String response = convertConsultationsToJson(consultations);
                 sendResponse(exchange, 200, response);
-            } else if (requestMethod.equalsIgnoreCase("PUT"))
-            {
-                System.out.println("--- Requête PUT reçue (mise a jour) ---");
-                // Mettre à jour une tâche existante
-                Map<String, String> queryParams =
-                        parseQueryParams(exchange.getRequestURI().getQuery());
-                if (queryParams.containsKey("id"))
-                {
-                    int taskId = Integer.parseInt(queryParams.get("id"));
-                    System.out.println("Mise a jour tache id=" + taskId);
-                    //String requestBody = readRequestBody(exchange);
-                    //System.out.println("requestNody = " + requestBody);
-                    //updateTask(taskId, requestBody);
-                    sendResponse(exchange, 200, "Tache mise a jour avec succes");
+            }
+            else if (requestMethod.equalsIgnoreCase("PUT")){
+                System.out.println("--- Requête PUT reçue (mise a jour d une consultation) ---");
+
+                Map<String, String> queryParams = parseQueryParams(exchange.getRequestURI().getQuery());
+                if (queryParams.containsKey("id")) {
+                    int consultationId = Integer.parseInt(queryParams.get("id"));
+                    System.out.println("Mise a jour tache id=" + consultationId);
+
+                    Map<String, String> requestBodyMap = readRequestBody(exchange);
+
+                    List<Consultation> consultations = consultationDAO.load();
+                    Consultation oldConsultation = consultations.stream()
+                            .filter(c -> c.getIdConsultation().equals(consultationId))
+                            .findFirst()
+                            .orElse(null);
+
+                    if(oldConsultation == null){
+                        sendResponse(exchange, 404, "Consultation avec id " + consultationId + " non trouvee");
+                        return;
+                    }
+                    oldConsultation.getPatient().setIdPatient(Integer.parseInt(requestBodyMap.get("patientId")));
+                    oldConsultation.setRaison(requestBodyMap.get("raison"));
+                    consultationDAO.save(oldConsultation);
+
+                    Consultation updatedConsultation = consultationDAO.load().stream()
+                            .filter(c -> c.getIdConsultation().equals(consultationId))
+                            .findFirst()
+                            .orElse(null);
+
+                    if(updatedConsultation != null && updatedConsultation.getRaison().equals(requestBodyMap.get("raison"))
+                    && updatedConsultation.getPatient().getIdPatient().equals(Integer.parseInt(requestBodyMap.get("patientId")))) {
+                        sendResponse(exchange, 200, "Consultation (id = " + consultationId + ") mise a jour avec succes");
+                    } else {
+                        sendResponse(exchange, 400, "Erreur lors de la mise a jour de la consultation");
+                    }
                 }
                 else sendResponse(exchange, 400, "ID de tache manquant dans les parametres");
             }
             else if (requestMethod.equalsIgnoreCase("DELETE"))
             {
-                System.out.println("--- Requête DELETE reçue (suppression) ---");
-                // Supprimer une tâche
-                Map<String, String> queryParams =
-                        parseQueryParams(exchange.getRequestURI().getQuery());
-                if (queryParams.containsKey("id"))
-                {
-                    int taskId = Integer.parseInt(queryParams.get("id"));
-                    System.out.println("Suppression tache id=" + taskId);
-                    //deleteTask(taskId);
-                    sendResponse(exchange, 200, "Tache supprimee avec succes");
+                System.out.println("--- Requête DELETE reçue (suppression d une consultation) ---");
+
+                Map<String, String> queryParams = parseQueryParams(exchange.getRequestURI().getQuery());
+                if (queryParams.containsKey("id")) {
+                    int consultationId = Integer.parseInt(queryParams.get("id"));
+
+                    List<Consultation> consultations = consultationDAO.load();
+                    Consultation oldConsultation = consultations.stream()
+                            .filter(c -> c.getIdConsultation().equals(consultationId))
+                            .findFirst()
+                            .orElse(null);
+
+                    if(oldConsultation == null){
+                        sendResponse(exchange, 404, "Consultation avec id " + consultationId + " non trouvee");
+                        return;
+                    }
+                    oldConsultation.setIdConsultation(null);
+                    oldConsultation.setPatient(null);
+                    oldConsultation.setRaison(null);
+
+                    consultationDAO.delete(consultationId);
+                    consultationDAO.save(oldConsultation);
+
+                    consultations = consultationDAO.load();
+                    Consultation updatedConsultation = consultations.getLast();
+
+                    if(updatedConsultation.getIdConsultation() != consultationId) {
+                        sendResponse(exchange, 200, "Consultation (id = " + consultationId + ") annule avec succes");
+                    } else {
+                        sendResponse(exchange, 400, "Erreur lors de l annulation de la consultation");
+                    }
                 }
                 else sendResponse(exchange, 400, "ID de tache manquant dans les parametres");
             }
