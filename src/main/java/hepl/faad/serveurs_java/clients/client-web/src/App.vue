@@ -1,85 +1,58 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from './components/HelloWorld.vue'
+import { ref, onMounted } from "vue";
+import MyCounter4 from "./components/MyCounter4.vue";
+// Typage des paramètres du compteur et des événements
+type CounterParam = {
+  initialValue: number;
+  text: string;
+  finalValue: number;
+};
+type CounterEvent = {
+  text: string;
+  value: number;
+};
+// Etats réactifs typés
+const params = ref<CounterParam[]>([]);
+const message = ref<string>("");
+// Méthodes
+function handleIncrement(e: CounterEvent): void {
+  message.value = `${e.text} a incrémenté sa valeur (${e.value})`;
+  console.log(`[APP] ${message.value}`);
+}
+function handleReachFinalValue(e: CounterEvent): void {
+  message.value = `${e.text} a atteint sa valeur finale (${e.value})`;
+  console.log(`[APP] ${message.value}`);
+}
+// Cycle de vie
+onMounted(() => {
+  params.value = [
+    { initialValue: 3, text: "Wagner", finalValue: 10 },
+    { initialValue: 1, text: "Caprasse", finalValue: 5 },
+    { initialValue: 12, text: "Charlet", finalValue: 18 },
+  ];
+});
 </script>
-
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
-
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-      </nav>
-    </div>
-  </header>
-
-  <RouterView />
+  <div class="page">
+    <MyCounter4
+      v-for="param in params"
+      :initialValue="param.initialValue"
+      :text="param.text"
+      :finalValue="param.finalValue"
+      @increment="handleIncrement"
+      @reach-final-value="handleReachFinalValue"
+    />
+    <h2>{{ message }}</h2>
+  </div>
 </template>
-
 <style scoped>
-header {
-  line-height: 1.5;
-  max-height: 100vh;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-nav {
-  width: 100%;
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
-}
-
-nav a.router-link-exact-active {
-  color: var(--color-text);
-}
-
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
-}
-
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
-}
-
-nav a:first-of-type {
-  border: 0;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
-
-    padding: 1rem 0;
-    margin-top: 1rem;
-  }
+.page {
+  min-height: 100vh;
+  background: linear-gradient(to bottom, #e0f7fa, #ffffff);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
 }
 </style>
