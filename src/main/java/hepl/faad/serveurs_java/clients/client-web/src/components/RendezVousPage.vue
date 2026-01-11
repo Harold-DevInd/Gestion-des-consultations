@@ -1,50 +1,182 @@
-<script>
-export default {
-  data() {
-    return {
-      count: 0,
-    };
-  },
-};
+<script setup lang="ts">
+    import { computed, onMounted, ref, type Ref } from "vue";
+    import type { Consultation } from "../model/entity/consultation";
+    import type { Doctor } from "@/model/entity/doctor";
+    import type { specialty } from "@/model/entity/specialty";
+
+    const emits = defineEmits<{
+        (e: "return-to-consultations"): void;
+        (e: "reservation-effectue", payload: { idConsultation: number, raison: string }): void;
+    }>();
+
+    const consultationsDisponible = ref<Consultation[]>([]);
+    const listeDoctors = ref<string[]>([]);
+    const listeSpecialties = ref<string[]>([]);
+
+    const selectedDoctor = ref<string>("");
+    const selectedSpecialty = ref<string>("");
+
+    const consultationFiltre = computed(() =>{ 
+        return consultationsDisponible.value.filter((consultation) => {
+            const choixDoctor = selectedDoctor.value === "" || consultation.doctor.lastName === selectedDoctor.value;
+            const choixSpecialty = selectedSpecialty.value === "" || consultation.doctor.specialty.nom === selectedSpecialty.value;
+            return choixDoctor && choixSpecialty;
+        });
+    })
+
+    onMounted(async () => {
+        // Charger les données nécessaires ici
+        // Par exemple, charger les consultations disponibles, les médecins et les spécialités
+        listeDoctors.value = ["Dr. House", "Dr. Mamour", "Dr. Strange"];
+        listeSpecialties.value = ["Diagnostic", "Neurochirurgie", "Chirurgie"];
+    });
+
+    function reservation(consultation: Consultation) {
+        const raison = window.prompt("Veuillez entrer la raison du rendez-vous :");
+
+        if (!raison) {
+            alert("La raison du rendez-vous est obligatoire.");
+            return;
+        }
+
+        if(raison.trim() === "") {
+            alert("La raison du rendez-vous ne peut pas être vide.");
+            return;
+        }
+
+        console.log("RendezVousPage.vue - reservation - consultation réservée :", consultation);
+        emits("reservation-effectue", { idConsultation: consultation.idConsultattion ?? 0, raison: raison});
+    }
 </script>
 
 <template>
-  <div class="cadre">
-    <span id="texte">
-      Mon compteur :
-      <span class="compteur">{{ count }}</span>
-    </span>
-    <button @click="count++">incrémente</button>
+  <div class="booking-panel">
+    <h3>Prendre un nouveau rendez-vous</h3>
+
+    <div class="filters">
+      <div class="filter-group">
+        <label>Spécialité :</label>
+        <select v-model="selectedSpecialty">
+          <option value="">-- Toutes --</option>
+          <option v-for="spec in listeSpecialties" :key="spec" :value="spec">
+            {{ spec }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Médecin :</label>
+        <select v-model="selectedDoctor">
+          <option value="">-- Tous --</option>
+          <option v-for="doc in listeDoctors" :key="doc" :value="doc">
+            {{ doc }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <table class="consultation-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Heure</th>
+          <th>Médecin</th>
+          <th>Spécialité</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="consultation in consultationFiltre" :key="consultation.idConsultattion ?? 0">
+          <td>{{ consultation.dateConsultation }}</td>
+          <td>{{ consultation.heureConsultation }}</td>
+          <td>{{ consultation.doctor.lastName }}</td>
+          <td>{{ consultation.doctor.specialty.nom }}</td>
+          <td>
+            <button class="btn-book" @click="reservation(consultation)">
+              Réserver
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p v-if="consultationFiltre.length === 0" class="no-result">
+      Aucune disponibilité pour ces critères.
+    </p>
+
+    <div class="footer">
+      <button class="btn-cancel" @click="$emit('return-to-consultations')">
+        Annuler / Retour
+      </button>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.cadre {
+.booking-panel {
+  border: 1px solid #ccc;
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+.filters {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 5px 10px;
-  border: 2px solid #ccc;
-  border-radius: 12px;
-  background-color: #f9f9f9; /* couleur de fond légère */
-  width: 300px;
-  height: 50px;
+  gap: 20px;
+  margin-bottom: 20px;
+  background: #f0f8ff;
+  padding: 15px;
+  border-radius: 6px;
 }
-#texte {
-  font-weight: bold;
-  font-size: 16px;
-  font-family: "Arial", sans-serif;
-  width: 170px;
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
 }
-.compteur {
-  color: red;
+
+select {
+  padding: 5px;
+  min-width: 150px;
 }
-button {
-  font-weight: bold;
-  width: 120px;
-  height: 40px;
-  border-radius: 10px;
-  font-size: 16px;
-  background-color: #fff9c4;
+
+.slots-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.consultation-table th, .consultation-table td {
+  border-bottom: 1px solid #eee;
+  padding: 10px;
+  text-align: left;
+}
+
+.btn-book {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-book:hover {
+  background-color: #2980b9;
+}
+
+.btn-cancel {
+  background-color: #95a5a6;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+.no-result {
+  text-align: center;
+  color: #888;
+  margin-top: 20px;
 }
 </style>

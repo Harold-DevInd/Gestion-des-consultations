@@ -86,6 +86,7 @@ function finReservation() {
     <div v-else>
       <ConsultationPage
         :consultations="consultations"
+        :patient-name="patientConnecte?.lastName ?? ''"
         @logout="gererDeconnexion"
         @go-to-reservation="modeReservation = true"
         @delete-consultation="chargerConsultations"
@@ -95,7 +96,7 @@ function finReservation() {
         v-if="modeReservation"
         :patient="patientConnecte"
         @return-to-consultations="gererRetourAccueil"
-        @reservation-complete="finReservation"
+        @reservation-effectue="finReservation"
       />
     </div>
   </div>
