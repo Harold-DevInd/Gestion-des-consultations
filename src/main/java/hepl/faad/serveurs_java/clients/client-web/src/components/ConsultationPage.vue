@@ -48,8 +48,8 @@
         <tr v-for="consult in consultations" :key="consult.idConsultattion ?? ''" >
           <td>{{ consult.dateConsultation }}</td>
           <td>{{ consult.heureConsultation }}</td>
-          <td>{{ consult.doctor.lastName }}</td>
-          <td>{{ consult.doctor.specialty.nom }}</td>
+          <td>{{ consult.doctor }}</td>
+          <td>{{ consult.specialty }}</td>
           <td>{{ consult.raison }}</td>
           <td>
             <button class="btn-delete" @click="suppprimerConsultation(consult.idConsultattion ?? 0)">

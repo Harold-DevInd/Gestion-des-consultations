@@ -124,8 +124,10 @@ public class ConsultationDAO {
 
                 Patient patient = new Patient(idPatient, patientLastName, patientFirstName, patientBirthDate);
 
-                Integer specialityId = rs.wasNull() ? null : specIdInt;
-                Specialty specialty = (specialityId != null) ? new Specialty(specialityId, specialtyName) : null;
+                /*Integer specialityId = rs.wasNull() ? null : specIdInt;
+                Specialty specialty = (specialityId != null) ? new Specialty(specialityId, specialtyName) : null;*/
+                Integer specialityId = specIdInt;
+                Specialty specialty = new Specialty(specialityId, specialtyName);
 
                 Doctor doctor = new Doctor(idDoctor, specialty, doctorLastName, doctorFirstName);
                 Consultation consultation = new Consultation(idConsul, doctor, patient, date.toLocalDate(), hour, raison);

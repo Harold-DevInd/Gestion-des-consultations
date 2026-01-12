@@ -269,6 +269,7 @@ public class serveurWeb {
                 }
 
                 String response = convertConsultationsToJson(consultations);
+                System.out.println("Nombre de consultations : " + consultations.size());
                 sendResponse(exchange, 200, response);
             }
             else if (requestMethod.equalsIgnoreCase("PUT")){
@@ -459,11 +460,12 @@ public class serveurWeb {
             Consultation consultation = consultations.get(i);
             json.append("{")
                     .append("\"idConsultation\":").append(consultation.getIdConsultation()).append(",")
-                    .append("\"doctor\":").append(consultation.getDoctor().getFirstName()).append(" ").append(consultation.getDoctor().getLastName()).append(",")
-                    .append("\"patient\":").append(consultation.getPatient().getFirstName()).append(" ").append(consultation.getPatient().getLastName()).append(",")
-                    .append("\"date\":\"").append(consultation.getDateConsultation()).append("\",")
-                    .append("\"hour\":\"").append(consultation.getHeureConsultation()).append("\",")
-                    .append("\"reason\":\"").append(consultation.getRaison()).append("\"")
+                    .append("\"doctor\":\"").append(consultation.getDoctor().getLastName()).append(" ").append(consultation.getDoctor().getFirstName()).append("\",")
+                    .append("\"patient\":\"").append(consultation.getPatient().getLastName()).append(" ").append(consultation.getPatient().getFirstName()).append("\",")
+                    .append("\"specialty\":\"").append(consultation.getDoctor().getSpecialty().getNom()).append("\",")
+                    .append("\"dateConsultation\":\"").append(consultation.getDateConsultation()).append("\",")
+                    .append("\"heureConsultation\":\"").append(consultation.getHeureConsultation()).append("\",")
+                    .append("\"raison\":\"").append(consultation.getRaison()).append("\"")
                     .append("}");
             if (i < consultations.size() - 1)
             {

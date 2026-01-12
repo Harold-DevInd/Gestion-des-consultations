@@ -3,8 +3,9 @@ import type { Patient } from "./patient"
 
 export interface Consultation {
     idConsultattion?: number | null
-    doctor: Doctor
-    patient?: Patient | null
+    doctor: string
+    patient?: string | null
+    specialty: string
     heureConsultation: string
     dateConsultation: string
     raison?: string | null

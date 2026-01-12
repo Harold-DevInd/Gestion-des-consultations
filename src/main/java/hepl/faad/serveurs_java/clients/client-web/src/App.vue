@@ -16,6 +16,7 @@ import type { PatientAccessLayer } from "./model/dao/patientAccessLayer";
 import type { SpecialtyAccessLayer } from "./model/dao/specialiteAccessLayer";
 import { C } from "vue-router/dist/router-CWoNjPRp.mjs";
 import type { PatientVM } from "./model/viewmodel/patientVM";
+import type { ConsultationVM } from "./model/viewmodel/consultationVM";
 
 const estConnecte = ref<boolean>(false);
 const modeReservation = ref<boolean>(false);
@@ -47,12 +48,8 @@ function gererConnexion(patient: Patient) {
       console.log("App.vue - gererConnexion - Données du patient chargées :");
       if(loadedPatient.lastName == patient.lastName && loadedPatient.firstName == patient.firstName) {
         window.alert("Connexion réussie !");
-        if(patientConnecte.value) {
-          patientConnecte.value.idPatient = loadedPatient.idPatient;
-          patientConnecte.value.lastName = loadedPatient.lastName;
-          patientConnecte.value.firstName = loadedPatient.firstName;
-          patientConnecte.value.dateNaissance = loadedPatient.dateNaissance;
-        }
+        patientConnecte.value = patient;
+        patientConnecte.value!.dateNaissance = loadedPatient.dateNaissance;
         estConnecte.value = true;
         chargerConsultations();
       } else {
@@ -84,13 +81,16 @@ function gererRetourAccueil() {
 }
 
 async function chargerConsultations() {
-  console.log("App.vue - chargerConsultations - patientConnecte.value :", patientConnecte.value);
+  console.log("App.vue - chargerConsultations - patientConnecte.value :", patientConnecte.value?.lastName);
   if (patientConnecte.value && patientConnecte.value.idPatient != null) {
-    // Appel à l'API pour charger les consultations du patient
     try{
-      //await specialtyDAO.load();
-      //await doctorDAO.load();
-      await consultationDAO.load();
+      const criteres: ConsultationVM = { 
+          patientId: patientConnecte.value.idPatient 
+      };
+
+      await consultationDAO.load(criteres);
+      window.alert("Consultations rechargées avec succès, nombre de consultations : " + consultationDAO.getList().length);
+      console.log(`Nombre de consultations chargées : ${consultationDAO.getList().length}`);
 
       consultations.value = consultationDAO.getList();
     } catch(error){

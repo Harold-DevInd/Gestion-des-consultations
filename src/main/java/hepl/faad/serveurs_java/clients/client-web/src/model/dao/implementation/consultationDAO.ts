@@ -49,12 +49,14 @@ export class ConsultationDAO implements ConsultationAccessLayer {
             const requette = await fetch(`${this.API_ENDPOINT}`);
             if(requette.ok) {
                 this.selectedConsultations = await requette.json();
+                console.log("ConsultationDAO.ts - load - Consultations chargees :", this.selectedConsultations);
             }
             else {
                 throw new ConsultationNotFoundError(`Consultation non trouve`);
             }   
         }
 
+        console.log(`Nombre de consultations chargées : ${this.selectedConsultations.length}`);
         return this.selectedConsultations;
     }
 
@@ -63,12 +65,14 @@ export class ConsultationDAO implements ConsultationAccessLayer {
             const newConsultation : Consultation = {
                 dateConsultation: consultation.dateConsultation,
                 heureConsultation: consultation.heureConsultation,
+                specialty: consultation.specialty,
+                raison: consultation.raison,
                 doctor: consultation.doctor,
                 patient: consultation.patient
             };
 
             const requette = await fetch(`${this.API_ENDPOINT}/${consultation.idConsultattion}`, {
-                method: 'POST',
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
                 },
@@ -76,7 +80,7 @@ export class ConsultationDAO implements ConsultationAccessLayer {
             });
         } else {
             const requette = await fetch(`${this.API_ENDPOINT}/${consultation.idConsultattion}`, {
-                method: 'PUT',
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },

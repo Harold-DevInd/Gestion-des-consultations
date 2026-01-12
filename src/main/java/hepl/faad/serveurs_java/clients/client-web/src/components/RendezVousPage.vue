@@ -18,8 +18,8 @@
 
     const consultationFiltre = computed(() =>{ 
         return consultationsDisponible.value.filter((consultation) => {
-            const choixDoctor = selectedDoctor.value === "" || consultation.doctor.lastName === selectedDoctor.value;
-            const choixSpecialty = selectedSpecialty.value === "" || consultation.doctor.specialty.nom === selectedSpecialty.value;
+            const choixDoctor = selectedDoctor.value === "" || consultation.doctor === selectedDoctor.value;
+            const choixSpecialty = selectedSpecialty.value === "" || consultation.specialty === selectedSpecialty.value;
             return choixDoctor && choixSpecialty;
         });
     })
@@ -89,8 +89,8 @@
         <tr v-for="consultation in consultationFiltre" :key="consultation.idConsultattion ?? 0">
           <td>{{ consultation.dateConsultation }}</td>
           <td>{{ consultation.heureConsultation }}</td>
-          <td>{{ consultation.doctor.lastName }}</td>
-          <td>{{ consultation.doctor.specialty.nom }}</td>
+          <td>{{ consultation.doctor }}</td>
+          <td>{{ consultation.specialty }}</td>
           <td>
             <button class="btn-book" @click="reservation(consultation)">
               Réserver
