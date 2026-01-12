@@ -423,7 +423,7 @@ public class serveurWeb {
         {
             Specialty specialty = specialties.get(i);
             json.append("{")
-                    .append("\"id\":").append(specialty.getIdSpecialty()).append(",")
+                    .append("\"idSpecialty\":").append(specialty.getIdSpecialty()).append(",")
                     .append("\"nom\":\"").append(specialty.getNom()).append("\"")
                     .append("}");
             if (i < specialties.size() - 1)
@@ -443,7 +443,7 @@ public class serveurWeb {
                     .append("\"id\":").append(doctor.getIdDoctor()).append(",")
                     .append("\"firstName\":\"").append(doctor.getFirstName()).append("\",")
                     .append("\"lastName\":\"").append(doctor.getLastName()).append("\",")
-                    .append("\"specialty\":").append(doctor.getSpecialty().getNom()).append(",")
+                    .append("\"specialty\":\"").append(doctor.getSpecialty().getNom()).append("\"")
                     .append("}");
             if (i < doctors.size() - 1)
             {

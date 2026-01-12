@@ -3,6 +3,16 @@
     import type { Consultation } from "../model/entity/consultation";
     import type { Doctor } from "@/model/entity/doctor";
     import type { specialty } from "@/model/entity/specialty";
+    import { DoctorDAO } from "@/model/dao/implementation/doctorDAO";
+    import { SpecialtyDAO } from "@/model/dao/implementation/specialiteDAO";
+    import type { DoctorAccessLayer } from "@/model/dao/doctorAccessLayer";
+    import type { SpecialtyAccessLayer } from "@/model/dao/specialiteAccessLayer";
+import { ConsultationDAO } from "@/model/dao/implementation/consultationDAO";
+import type { ConsultationAccessLayer } from "@/model/dao/consultationAccessLayer";
+
+    const props = defineProps<{
+        patientId: number;
+    }>();
 
     const emits = defineEmits<{
         (e: "return-to-consultations"): void;
@@ -10,6 +20,10 @@
     }>();
 
     const consultationsDisponible = ref<Consultation[]>([]);
+    const doctorDAO: DoctorAccessLayer = new DoctorDAO();
+    const specialtyDAO: SpecialtyAccessLayer = new SpecialtyDAO();
+    const consultationDAO: ConsultationAccessLayer = new ConsultationDAO();
+
     const listeDoctors = ref<string[]>([]);
     const listeSpecialties = ref<string[]>([]);
 
@@ -25,10 +39,22 @@
     })
 
     onMounted(async () => {
-        // Charger les données nécessaires ici
-        // Par exemple, charger les consultations disponibles, les médecins et les spécialités
-        listeDoctors.value = ["Dr. House", "Dr. Mamour", "Dr. Strange"];
-        listeSpecialties.value = ["Diagnostic", "Neurochirurgie", "Chirurgie"];
+        await doctorDAO.load();
+        await specialtyDAO.load();
+        await consultationDAO.load();
+
+        const consultationLibre = consultationDAO.getList().filter((consultation) => consultation.raison == "" || consultation.raison == "null");
+
+        for(const consult of consultationLibre) {
+            console.log(`RendezVous libre id : ${consult.idConsultattion}`);
+            consultationsDisponible.value.push(consult);
+        }
+        for(const spe of specialtyDAO.getList()) {
+            listeSpecialties.value.push(`${spe.nom}`);
+        }
+        for(const doc of doctorDAO.getList()) {
+            listeDoctors.value.push(`${doc.lastName} ${doc.firstName}`);
+        }
     });
 
     function reservation(consultation: Consultation) {

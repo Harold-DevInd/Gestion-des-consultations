@@ -25,7 +25,7 @@
 <template>
   <div class="list-container">
     <div class="header">
-      <h2>Vos Rendez-vous</h2>
+      <h2>Rendez-vous pris</h2>
       <p v-if="patientName">Bienvenue, {{ patientName }}</p>
     </div>
 

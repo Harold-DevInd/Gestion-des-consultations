@@ -151,7 +151,7 @@ function deleteConsultation(idConsultation: number) {
       
       <div v-else>
         <RendezVousPage
-          :patient="patientConnecte"
+          :patientId="patientConnecte?.idPatient ?? 0"
           @return-to-consultations="gererRetourAccueil"
           @reservation-effectue="finReservation"
         />
