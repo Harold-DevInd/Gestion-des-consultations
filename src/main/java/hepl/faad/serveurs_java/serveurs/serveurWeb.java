@@ -12,6 +12,7 @@ import hepl.faad.serveurs_java.model.entity.Doctor;
 import hepl.faad.serveurs_java.model.entity.Patient;
 import hepl.faad.serveurs_java.model.entity.Specialty;
 import hepl.faad.serveurs_java.model.viewmodel.DoctorSearchVM;
+import hepl.faad.serveurs_java.model.viewmodel.PatientSearchVM;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -63,6 +64,18 @@ public class serveurWeb {
     static class SpecialitiesHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
+            // Ajout des entetes CORS pour la permission
+            exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+            exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE");
+            exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type,Authorization");
+
+            //requete option pour le test du navigateur
+            if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
+                // On répond juste "C'est bon, tu peux passer" (Code 204: No Content)
+                exchange.sendResponseHeaders(204, -1);
+                return;
+            }
+
             String requestMethod = exchange.getRequestMethod();
             if (requestMethod.equalsIgnoreCase("GET"))
             {
@@ -79,6 +92,18 @@ public class serveurWeb {
     static class DoctorsHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
+            // Ajout des entetes CORS pour la permission
+            exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+            exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE");
+            exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type,Authorization");
+
+            //requete option pour le test du navigateur
+            if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
+                // On répond juste "C'est bon, tu peux passer" (Code 204: No Content)
+                exchange.sendResponseHeaders(204, -1);
+                return;
+            }
+
             String requestMethod = exchange.getRequestMethod();
             if (requestMethod.equalsIgnoreCase("GET"))
             {
@@ -122,22 +147,50 @@ public class serveurWeb {
     static class PatientsHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
+            // Ajout des entetes CORS pour la permission
+            exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+            exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE");
+            exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type,Authorization");
+
+            //requete option pour le test du navigateur
+            if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
+                // On répond juste "C'est bon, tu peux passer" (Code 204: No Content)
+                exchange.sendResponseHeaders(204, -1);
+                return;
+            }
+
             String requestMethod = exchange.getRequestMethod();
-            if (requestMethod.equalsIgnoreCase("POST"))
+            if (requestMethod.equalsIgnoreCase("GET")) {
+                System.out.println("--- Requête Get reçue (login du patient) ---");
+                Map<String, String> queryParams = parseQueryParams(exchange.getRequestURI().getQuery());
+
+                PatientSearchVM psvm = new PatientSearchVM();
+                psvm.setIdPatient(Integer.valueOf(queryParams.get("id")));
+                List<Patient> patients = patientDAO.load(psvm);
+
+                if(!patients.isEmpty()){
+                    System.out.println("Patient trouve");
+                    Patient loginPatient = patients.getFirst();
+
+                    String loginPatientJSON = convertPatientsToJson(loginPatient);
+                    sendResponse(exchange, 200, loginPatientJSON);
+                } else {
+                    sendResponse(exchange, 404, "Aucun patient correspondant");
+                }
+            } else if (requestMethod.equalsIgnoreCase("POST"))
             {
                 System.out.println("--- Requête POST reçue (ajout d un Patient) ---");
                 List<Patient> oldPatients = patientDAO.load();
                 Map<String, String> requestBodyMap = readRequestBody(exchange);
 
-                String isNew = requestBodyMap.get("newPatient");
-                String patientId = requestBodyMap.get("patientId");
+                String isNew = requestBodyMap.get("estNouveau");
+                String patientId = requestBodyMap.get("idPatient");
                 String firstName = requestBodyMap.get("firstName");
                 String lastName = requestBodyMap.get("lastName");
-                String birthDate = requestBodyMap.get("birthDate");
                 Patient newPatient = new Patient();
                 newPatient.setFirstName(firstName);
                 newPatient.setLastName(lastName);
-                newPatient.setDateNaissance(LocalDate.parse(birthDate));
+
                 if(!isNew.equalsIgnoreCase("true")){
                     if(!patientId.isEmpty()) {
                         newPatient.setIdPatient(Integer.parseInt(patientId));
@@ -149,16 +202,16 @@ public class serveurWeb {
 
                 if(!isNew.equalsIgnoreCase("true"))
                 {
-                    sendResponse(exchange, 200, "Patient (id = " + newPatient.getIdPatient() +
-                            ") mis a jour avec succes");
+                    String reponse = convertPatientsToJson(newPatient);
+                    sendResponse(exchange, 200, reponse);
                 }
                 else{
                     if(oldPatients.size() == newPatients.size()){
                         sendResponse(exchange, 400, "Erreur lors de l'ajout du patient");
                         return;
                     }
-                    sendResponse(exchange, 201, "Patient (id = " + newPatients.getLast().getIdPatient() +
-                            ") ajoutee avec succes");
+                    String reponse = convertPatientsToJson(newPatients.getLast());
+                    sendResponse(exchange, 201, reponse);
                 }
             }
             else sendResponse(exchange, 405, "Methode non autorisee");
@@ -168,6 +221,18 @@ public class serveurWeb {
     static class ConsultationsHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
+            // Ajout des entetes CORS pour la permission
+            exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+            exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE");
+            exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type,Authorization");
+
+            //requete option pour le test du navigateur
+            if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
+                // On répond juste "C'est bon, tu peux passer" (Code 204: No Content)
+                exchange.sendResponseHeaders(204, -1);
+                return;
+            }
+
             String requestMethod = exchange.getRequestMethod();
             if (requestMethod.equalsIgnoreCase("GET")) {
                 System.out.println("--- Requête GET reçue (obtenir la liste des consultations) ---");
@@ -285,7 +350,9 @@ public class serveurWeb {
     }
 
     private static void sendResponse(HttpExchange exchange, int statusCode, String response) throws IOException {
-        System.out.println("Envoi de la réponse, code : " + statusCode + " ");
+        System.out.print("Envoi de la réponse, code : " + statusCode + " , ");
+        if(statusCode >= 400) {System.out.print(response);}
+        System.out.print("\n**********************************\n");
         exchange.sendResponseHeaders(statusCode, response.length());
         OutputStream os = exchange.getResponseBody();
         os.write(response.getBytes());
@@ -391,7 +458,7 @@ public class serveurWeb {
         {
             Consultation consultation = consultations.get(i);
             json.append("{")
-                    .append("\"id\":").append(consultation.getIdConsultation()).append(",")
+                    .append("\"idConsultation\":").append(consultation.getIdConsultation()).append(",")
                     .append("\"doctor\":").append(consultation.getDoctor().getFirstName()).append(" ").append(consultation.getDoctor().getLastName()).append(",")
                     .append("\"patient\":").append(consultation.getPatient().getFirstName()).append(" ").append(consultation.getPatient().getLastName()).append(",")
                     .append("\"date\":\"").append(consultation.getDateConsultation()).append("\",")
@@ -404,6 +471,15 @@ public class serveurWeb {
             }
         }
         json.append("]");
+        return json.toString();
+    }
+    private static String convertPatientsToJson(Patient patient){
+        StringBuilder json = new StringBuilder("{");
+        json.append("\"idPatient\":").append(patient.getIdPatient()).append(",")
+                    .append("\"lastName\":\"").append(patient.getLastName()).append("\",")
+                    .append("\"firstName\":\"").append(patient.getFirstName()).append("\",")
+                    .append("\"dateNaissance\":\"").append(patient.getDateNaissance()).append("\"");
+        json.append("}");
         return json.toString();
     }
 

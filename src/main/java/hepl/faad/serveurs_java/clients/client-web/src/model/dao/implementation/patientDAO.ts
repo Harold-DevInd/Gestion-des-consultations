@@ -12,16 +12,19 @@ export class PatientNotFoundError extends Error {
 export class PatientDAO implements PatientAccessLayer {
     private API_ENDPOINT: string = "http://localhost:8088/api/patients";
 
-    public async load(patientVM?: PatientVM): Promise<Patient> {
-        const requette = await fetch(`${this.API_ENDPOINT}/${patientVM?.patientId}`, {
+    public async load(patientVM?: PatientVM): Promise<any> {
+        let url = this.API_ENDPOINT;
+        if(patientVM?.patientId) {
+            const queryParam = new URLSearchParams({ id: patientVM.patientId.toString() });
+            url += `?${queryParam.toString()}`;
+        }
+        const requette = await fetch(url, {
             method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            },
         })
 
         if(requette.ok) {
             const response = await requette.json();
+            console.log(`PatientDAO.ts - load - Patient trouvé`);
             return response;
         } else {
             throw new PatientNotFoundError("Patient non trouve");
@@ -39,9 +42,9 @@ export class PatientDAO implements PatientAccessLayer {
         
         if(requette.ok){
             const response = await requette.json();
-            return response.id;
+            return response.idPatient;
         } else {
-            throw new Error("Erreur lors de la sauvegarde du patient");
+            throw new PatientNotFoundError("Erreur lors de la sauvegarde du patient");
         }
         
     }
